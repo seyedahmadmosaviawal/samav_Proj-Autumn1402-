@@ -35,7 +35,7 @@ char* samav_exist(int argc, char* argv[]){
             return NULL;
         }
         while ((entry = readdir(dir)) != NULL) {
-            if (entry->d_type == DT_DIR && strcmp(entry->d_name, "samav") == 0){
+            if (entry->d_type == DT_DIR && strcmp(entry->d_name, ".samav") == 0){
                 return tmp_cpy;
             }
         }
@@ -66,10 +66,26 @@ int main(int argc, char* argv[]){
     if(getcwd(Current, sizeof(Current)) == NULL) {fprintf(stdout, "SAMAV : There Is An Unknown Error Please Try Again!"); return 1;}
     char* Samav_Root;
     Samav_Root = samav_exist(argc, argv);
-    // Menu:
+    ///////////////////// Menu: /////////////////////
 
+    // All The samav init:
     if(strcmp(argv[1], "init") == 0){
-        
+        if(Samav_Root != NULL){
+            fprintf(stdout, "SAMAV : There Is Exists An Initialized Repository At Address:\n%s\\.samav", Samav_Root);
+            return 1;
+        }
+        else{
+            chdir(Current);
+            system("mkdir .samav");
+            system("attrib +h .samav");
+            fprintf(stdout, "SAMAV : Initialization Was Successful Now You Have A Repository At Address:\n%s\\.samav", Current);
+            return 0;
+        }
+    }
+
+    // All The samav config:
+    else if(strcmp(argv[1], "config") == 0){
+
     }
 
 
