@@ -18,6 +18,7 @@
 #include <sys/types.h>
 
 #define global_thing "C:\\Users\\user\\Desktop\\c programs\\tamrin\\project_1402_autumn\\global"
+#define wildcard_path "C:\\Users\\user\\Desktop\\c programs\\tamrin\\project_1402_autumn\\global\\wildcard.txt"
 
 // Check Samav Exists?:
 char* samav_exist(int argc, char* argv[]){
@@ -107,6 +108,54 @@ int global_writter(int argc, char* argv[], int line, char* global, int choose){
     return 0;
 }
 
+int Add_to_stage_file_mod(int argc, char* argv[], char * filepath){
+    char wildcard[1000] = "dir /b ";
+    strcat(wildcard, filepath);
+    strcat(wildcard, " >>");
+    strcat(wildcard, " wildcard.txt");
+    system(wildcard);
+    FILE* file_read = fopen("wildcard.txt", "r");
+    FILE* file_find = fopen("stage.txt", "r");
+    char line_reader[1024];
+    char line_wild[1024];
+    // MAIN LOOP:
+    int exist = 2;
+    while(fgets(line_wild, 1024, file_read)){
+        line_wild[strlen(line_wild) - 1] = '\0';
+        exist = 0;
+        if(strcmp(line_wild, "File Not Found") == 0){
+            fprintf(stdout, "SAMAV : There Is No File With Specified Address! Please Try Again!");
+            fclose(file_find);
+            fclose(file_read);
+            system("del wildcard.txt");  
+            return 1;
+        }
+        while(fgets(line_reader, 1024, file_find)){
+            line_reader[strlen(line_reader) - 1] = '\0';
+            if(strcmp(line_reader, line_wild) == 0){
+                fprintf(stdout , "SAMAV : File With Address: \'%s\' Exists! Please Use Commit Operation!\n", line_wild);
+                exist = 1;
+                break;
+            }
+        }
+        if(!exist){
+            fclose(file_find);
+            file_find = fopen("stage.txt", "a");
+            fprintf(file_find,"%s\n" ,line_wild);
+            fclose(file_find);
+            file_find = fopen("stage.txt", "r");
+            fprintf(stdout, "SAMAV : A File With Address: \'%s\' Has Been Added!\n", line_wild);
+        }
+        rewind(file_find);
+    }
+    fclose(file_find);
+    fclose(file_read);
+    system("del wildcard.txt");
+    return 0;
+}
+
+
+
 
 int main(int argc, char* argv[]){
     // Less Than 2 Inputs:
@@ -155,7 +204,16 @@ int main(int argc, char* argv[]){
                     chdir(".samav");
                     file_1 = fopen("config.txt", "w");
                     fprintf(file_1, "%s%s", name_global, email_global);
+                    fprintf(file_1, "branch = master\n");
+                    fprintf(file_1, "last_commit_id: %d\n", 999999);
+                    fprintf(file_1, "current_commit_id: %d\n", 999999);
                     fclose(file_1);
+                    file_1 = fopen("stage.txt", "w");
+                    fclose(file_1);
+                    file_1 = fopen("track.txt", "w");
+                    fclose(file_1);
+                    mkdir("commits");
+                    mkdir("files");
                     chdir(global_thing);
                     file_1 = fopen("config_local.txt", "w");
                     fprintf(file_1, "name:\nemail:\n");
@@ -173,7 +231,16 @@ int main(int argc, char* argv[]){
                 chdir(".samav");
                 file_1 = fopen("config.txt", "w");
                 fprintf(file_1, "%s%s", name_local, email_local);
+                fprintf(file_1, "branch = master\n");
+                fprintf(file_1, "last_commit_id: %d\n", 999999);
+                fprintf(file_1, "current_commit_id: %d\n", 999999);
                 fclose(file_1);
+                file_1 = fopen("stage.txt", "w");
+                fclose(file_1);
+                file_1 = fopen("track.txt", "w");
+                fclose(file_1);
+                mkdir("commits");
+                mkdir("files");
                 chdir(global_thing);
                 file_1 = fopen("config_local.txt", "w");
                 fprintf(file_1, "name:\nemail:\n");
@@ -227,6 +294,24 @@ int main(int argc, char* argv[]){
         }
     }
 
+    else if(strcmp(argv[1], "add") == 0){
+        if(Samav_Root == NULL){fprintf(stdout ,"SAMAV : You Don't Have Any Initilized Repository. Please Use This Operation First:\nsamav init\nThen Try Again Later!"); return 1;}
+        if(argc < 3){fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!"); return 1;}
+        strcat(Samav_Root, "\\.samav");
+        chdir(Samav_Root);
+        if(strcmp(argv[2], "-f") == 0){
+            return 0;
+        }
+        if(strcmp(argv[2], "-n") == 0){
+            return 0;
+        }
+        if(strcmp(argv[2], "-redo") == 0){
+            return 0;
+        }
+        else{
+            return Add_to_stage_file_mod(argc, argv, argv[2]);
+        }
+    }
 
 
 
