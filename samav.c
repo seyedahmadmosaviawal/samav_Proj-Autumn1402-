@@ -24,7 +24,7 @@
 // Don't Have: {fprintf(stdout ,"SAMAV : You Don't Have Any Initilized Repository. Please Use This Operation First:\nsamav init\nThen Try Again Later!"); return 1;}
 
 
-// proto:
+// Proto_Types:
 int check_difference(char* path1, char* path2);
 char* samav_exist(int argc, char* argv[]);
 int global_writter(int argc, char* argv[], int line, char* global, int choose);
@@ -33,14 +33,21 @@ int Add_to_stage_file_mod_2(int argc, char* argv[], char * filepath);
 int Is_Directory(char* path);
 int Add_to_stage_folder_mod(int argc, char* argv[], char* pathfile);
 int Add_with_depth(int argc, char* argv[], int depth, char* pathfile);
+char** config_reader(char* rootpath);
+int run_commit(int argc, char* argv[], char* root_path);
+int inc_last_commit_ID(char* root_path);
+bool check_file_directory_exists(char *filepath, char* root_path);
+int commit_staged_file(int commit_ID, char* filepath, char* rootpath);
+int track_file(char *filepath, char* rootpath);
+bool is_tracked(char *filepath, char* rootpath);
+int create_commit_file(int commit_ID, char *message, char* rootpath);
+int find_file_last_commit(char* filepath, char* rootpath);
+
 
 // Check Two File Are Different Or No?
 int check_difference(char* path1, char* path2){
-    printf("check1\n");
     FILE* file1 = fopen(path1, "r");
-    printf("check2\n");
     FILE* file2 = fopen(path2, "r");
-    printf("check3\n");
     char ch1;
     char ch2;
     rewind(file1);
@@ -375,6 +382,287 @@ int status(int argc, char* argv[], int state, char* path){
     }
 }
 
+// MAKE BRANCH:
+int branch_maker(int argc, char* argv[], char* root_path){
+    strcat(root_path, "\\.samav\\branches");
+    DIR *dir;
+    struct dirent *entry;
+
+    // Replace "directory_path" with the actual directory path you want to read
+    dir = opendir(root_path);
+
+    if (dir == NULL) {
+        perror("SAMAV : Error Opening Directory!");
+        return 1;
+    }
+
+    while ((entry = readdir(dir)) != NULL) {
+        if(strcmp(entry->d_name, argv[2]) == 0){
+            fprintf(stdout, "SAMAV : A Branch With Name: \'%s\' is Already Exists! Please Choose A Different Name!\n", argv[2]);
+            return 1;
+        }
+    }
+    // we have to make a branch here:
+    mkdir(argv[2]);
+    //later
+}
+
+// read config:
+char** config_reader(char* rootpath){
+    char res[10][100];
+    strcat(rootpath, "\\.samav\\config.txt");
+    FILE* file = fopen(rootpath, "r");
+    char line[1000];
+    fgets(line, 1000, file);
+    int a = strlen(line);
+    line[a - 1] = '\0';
+    strcpy(res[0], line);
+    res[0][a - 1] = '\0';
+    fgets(line, 1000, file);
+    a = strlen(line);
+    line[a - 1] = '\0';
+    strcpy(res[1], line);
+    res[1][a - 1] = '\0';
+    while(fgets(line, 1000, file)){
+        if(strncmp(line, "branch =", 8) == 0){
+            sscanf(line, "branch = %s", res[2]);
+            fclose(file);
+            return res;
+        }
+    }
+}
+
+////////////////////// ALL THE WORK WE SHOULD DO IN COMMIT : ///////////////////
+
+int run_commit(int argc, char* argv[], char* root_path) {
+
+    char message[73];
+    strcpy(message, argv[3]);
+    char path[1000];
+    
+
+    int commit_ID = inc_last_commit_ID(root_path);
+    if (commit_ID == -1) return 1;
+    strcpy(path, root_path);
+    strcat(path, "\\.samav\\stage.txt");
+    FILE *file = fopen(path, "r");
+    if (file == NULL) return 1;
+    char line[1024];
+    int q = 1;
+    while (fgets(line, sizeof(line), file) != NULL) {
+        int length = strlen(line);
+
+        // remove '\n'
+        if (length > 0 && line[length - 1] == '\n') {
+            line[length - 1] = '\0';
+        }
+        
+        if (!check_file_directory_exists(line, root_path)) {
+            char dir_path[1024];
+            strcpy(dir_path, root_path);
+            strcat(dir_path, "\\.samav\\files\\");
+            strcat(dir_path, line);
+            if (mkdir(dir_path) != 0) return 1;
+        }
+        fprintf(stdout, "SAMAV : %d) Committed A File With Address: %s\n", q ,line);
+        q++;
+        commit_staged_file(commit_ID, line, root_path);
+        track_file(line, root_path);
+    }
+    fclose(file); 
+    
+    // free staging
+    file = fopen(path, "w");
+    if (file == NULL) return 1;
+    fclose(file);
+
+    create_commit_file(commit_ID, message, root_path);
+    fprintf(stdout, "SAMAV : Commit Was Successfully Done With Commit ID: %d\n%d File(s) Has Been Tracked!\n", commit_ID, q - 1);
+    return 0;
+}
+
+// returns new commit_ID
+int inc_last_commit_ID(char* root_path) {
+    char copy[1000];
+    strcpy(copy, root_path);
+    strcat(root_path, "\\.samav\\config.txt");
+    strcat(copy, "\\.samav\\tmp_config.txt");
+    FILE *file = fopen(root_path, "r");
+    if (file == NULL) return -1;
+    
+    FILE *tmp_file = fopen(copy, "w");
+    if (tmp_file == NULL) return -1;
+
+    int last_commit_ID;
+    char line[1000];
+    while (fgets(line, sizeof(line), file) != NULL) {
+        if (strncmp(line, "last_commit_ID", 14) == 0) {
+            sscanf(line, "last_commit_ID: %d\n", &last_commit_ID);
+            last_commit_ID++;
+            fprintf(tmp_file, "last_commit_ID: %d\n", last_commit_ID);
+
+        } else fprintf(tmp_file, "%s", line);
+    }
+    fclose(file);
+    fclose(tmp_file);
+
+    remove(root_path);
+    rename(copy, "config.txt");
+    return last_commit_ID;
+}
+
+bool check_file_directory_exists(char *filepath, char* root_path) {
+    strcat(root_path, "\\.samav\\files");
+    DIR *dir = opendir(root_path);
+    struct dirent *entry;
+    if (dir == NULL) {
+        fprintf(stdout, "SAMAV : There is An Unknown Problem While Opening Directory!");
+        return 1;
+    }
+    while ((entry = readdir(dir)) != NULL) {
+        if (entry->d_type == DT_DIR && strcmp(entry->d_name, filepath) == 0) return true;
+    }
+    closedir(dir);
+
+    return false;
+}
+
+int commit_staged_file(int commit_ID, char* filepath, char* rootpath) {
+    FILE *read_file, *write_file;
+    char read_path[1024];
+    strcpy(read_path, filepath);
+    char write_path[1024];
+    strcpy(write_path, rootpath);
+    strcpy(write_path, "\\.samav\\files\\");
+    strcat(write_path, filepath);
+    strcat(write_path, "\\");
+    char tmp[100];
+    sprintf(tmp, "%d", commit_ID);
+    strcat(write_path, tmp);
+
+    read_file = fopen(read_path, "r");
+    if (read_file == NULL) return 1;
+
+    write_file = fopen(write_path, "w");
+    if (write_file == NULL) return 1;
+
+    char buffer;
+    buffer = fgetc(read_file);
+    while(buffer != EOF) {
+        fputc(buffer, write_file);
+        buffer = fgetc(read_file);
+    }
+    fclose(read_file);
+    fclose(write_file);
+
+    return 0;
+}
+
+int track_file(char *filepath, char* rootpath) {
+    if (is_tracked(filepath, rootpath)) return 0;
+    strcat(rootpath, "\\.samav\\track.txt");
+    FILE *file = fopen(rootpath, "a");
+    if (file == NULL) return 1;
+    fprintf(file, "%s\n", filepath);
+    return 0;
+}
+
+bool is_tracked(char *filepath, char* rootpath) {
+    strcat(rootpath, "\\.samav\\track.txt"); 
+    FILE *file = fopen(rootpath, "r");
+    if (file == NULL) return false;
+    char line[1024];
+    while (fgets(line, sizeof(line), file) != NULL) {
+        int length = strlen(line);
+
+        // remove '\n'
+        if (length > 0 && line[length - 1] == '\n') {
+            line[length - 1] = '\0';
+        }
+        
+        if (strcmp(line, filepath) == 0) return true;
+
+    }
+    fclose(file); 
+
+    return false;
+}
+
+int create_commit_file(int commit_ID, char *message, char* rootpath) {
+    char commit_filepath[1024];
+    strcpy(commit_filepath, rootpath);
+    strcat(commit_filepath, "\\.samav\\commits\\");
+    char tmp[100];
+    sprintf(tmp, "%d", commit_ID);
+    strcat(commit_filepath, tmp);
+
+    FILE *file = fopen(commit_filepath, "w");
+    if (file == NULL) return 1; 
+    char alaki[1000];
+    strcpy(alaki, "time /t >> \"");
+    strcat(alaki, global_thing);
+    strcat(alaki, "\\time.txt\"");
+    system(alaki);
+    strcpy(alaki, global_thing);
+    strcat(alaki, "\\time.txt");
+    FILE* time = fopen(alaki, "r");
+    int hour, minute;
+    fscanf(time, "%d:%d", &hour, &minute);
+    fclose(time);
+    fopen(alaki, "w");
+    fclose(time);
+    fprintf(file, "message: %s\n", message);
+    fprintf(file, "%d\n", (60 * hour) + minute);
+    char** res = (char**) malloc(10 * sizeof(char*));
+    for(int i = 0; i < 10; i++){
+        *(res + i) = (char*) malloc(sizeof(char) * 100);
+    }
+    res = config_reader(rootpath);
+    fprintf(file, "%s\n", res[2]);
+    fprintf(file, "%s\n", res[0]);
+    fprintf(file, "%s\n", res[1]);
+    fprintf(file, "files:\n");
+    DIR *dir = opendir(".");
+    struct dirent *entry;
+    if (dir == NULL) {
+        perror("Error opening current directory");
+        return 1;
+    }
+    while ((entry = readdir(dir)) != NULL) {
+        if (entry->d_type == DT_REG && is_tracked(entry->d_name, rootpath)) {
+            int file_last_commit_ID = find_file_last_commit(entry->d_name, rootpath);
+            fprintf(file, "%s %d\n", entry->d_name, file_last_commit_ID);
+        }
+    }
+    closedir(dir); 
+    fclose(file);
+    return 0;
+}
+
+int find_file_last_commit(char* filepath, char* rootpath) {
+    char filepath_dir[1024];
+    strcpy(filepath_dir, rootpath);
+    strcat(filepath_dir, "\\.samav\\files\\");
+    strcat(filepath_dir, filepath);
+
+    int max = -1;
+    
+    DIR *dir = opendir(filepath_dir);
+    struct dirent *entry;
+    if (dir == NULL) return 1;
+
+    while((entry = readdir(dir)) != NULL) {
+        if (entry->d_type == DT_REG) {
+            int tmp = atoi(entry->d_name);
+            max = max > tmp ? max: tmp;
+        }
+    }
+    closedir(dir);
+
+    return max;
+}
+
+////////////////////// ALL THE WORK WE SHOULD DO IN COMMIT : ///////////////////
 
 int main(int argc, char* argv[]){
     // Less Than 2 Inputs:
@@ -544,20 +832,26 @@ int main(int argc, char* argv[]){
             return Add_to_stage_file_mod(argc, argv, argv[2]);
         }
     }
-    else if(strcmp(argv[1], "reset") == 0){
+    
+    // else if(strcmp(argv[1], "reset") == 0){
+    //     if(Samav_Root == NULL){fprintf(stdout ,"SAMAV : You Don't Have Any Initilized Repository. Please Use This Operation First:\nsamav init\nThen Try Again Later!"); return 1;}
+    //     if(argc < 3){fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!"); return 1;}
+    //     if(strcmp(argv[2], "-undo") == 0){
+    //         return 0;
+    //     }
+    // }
+    else if(strcmp(argv[1], "commit") == 0){
         if(Samav_Root == NULL){fprintf(stdout ,"SAMAV : You Don't Have Any Initilized Repository. Please Use This Operation First:\nsamav init\nThen Try Again Later!"); return 1;}
-        if(argc < 3){fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!"); return 1;}
-        if(strcmp(argv[2], "-undo") == 0){
-            return 0;
-        }
-
-
+        if(argc < 4){fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!"); return 1;}
+        if(strlen(argv[3]) >= 20){fprintf(stdout, "SAMAV : Your Message Has %d Character And It's Over Limit (72)!\nPlease Choose A Shorter Message!", strlen(argv[3])); return 1;}
+        return run_commit(argc, argv, Samav_Root);
     }
-
-
-
-
-
 
     return 0;
 }
+
+
+
+
+
+
