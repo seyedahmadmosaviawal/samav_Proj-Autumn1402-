@@ -40,7 +40,7 @@ char** config_reader(char* rootpath);
 int run_commit(int argc, char* argv[], char* root_path);
 int inc_last_commit_ID(char* root_path);
 bool check_file_directory_exists(char *filepath, char* root_path);
-int commit_staged_file(int commit_ID, char* filepath, char* rootpath);
+int commit_staged_file(int commit_ID, char* filepath, char* rootpath, char* filepath2);
 int track_file(char *filepath, char* rootpath);
 bool is_tracked(char *filepath, char* rootpath);
 int create_commit_file(int commit_ID, char *message, char* rootpath);
@@ -48,6 +48,8 @@ int find_file_last_commit(char* filepath, char* rootpath);
 int Add_to_stage_folder_mod_simple(int argc, char* argv[], char* pathfile, char* rootpath);
 int Add_to_stage_file_mod_2_simple(int argc, char* argv[], char * filepath, char* rootpath);
 int Add_to_stage_file_mod_simple(int argc, char* argv[], char * filepath, char* rootpath);
+int directory_reader(char* path);
+
 
 // How Many Lines?
 int line_counter(char* path){
@@ -500,6 +502,10 @@ int Add_to_stage_file_mod_simple(int argc, char* argv[], char * filepath, char* 
         if(!exist){
             fclose(file_find);
             file_find = fopen("stage.txt", "a");
+            char op[1000] = "dir /s /b ";
+            strcat(op, line_wild);
+            strcat(op, " >> stage_copy.txt");
+            system(op);
             fprintf(file_find,"%s\n" ,line_wild);
             fclose(file_find);
             file_find = fopen("stage.txt", "r");
@@ -570,6 +576,10 @@ int Add_to_stage_file_mod_2_simple(int argc, char* argv[], char * filepath, char
     if(!exist){
         fclose(file_find);
         file_find = fopen("stage.txt", "a");
+        char op[1000] = "dir /s /b ";
+        strcat(op, fileName);
+        strcat(op, " >> stage_copy.txt");
+        system(op);
         fprintf(file_find,"%s\n" ,fileName);
         fclose(file_find);
         file_find = fopen("stage.txt", "r");
@@ -618,7 +628,7 @@ int Add_to_stage_folder_mod_simple(int argc, char* argv[], char* pathfile, char*
     closedir(dir);
     return 0;
 }
-/////// A Simple Version://////
+/////// A Simple Version!//////
 
 
 
@@ -667,23 +677,26 @@ int branch_maker(int argc, char* argv[], char* root_path){
 
 // read config:
 char** config_reader(char* rootpath){
-    char res[10][100];
+    char** res = (char**) malloc(sizeof(char*) * 10);
+    for(int i = 0; i < 10; i++){
+        *(res + i) = (char*) malloc(sizeof(char) * 1000);
+    }
     strcat(rootpath, "\\.samav\\config.txt");
     FILE* file = fopen(rootpath, "r");
     char line[1000];
     fgets(line, 1000, file);
     int a = strlen(line);
     line[a - 1] = '\0';
-    strcpy(res[0], line);
+    strcpy(*(res + 0), line);
     res[0][a - 1] = '\0';
     fgets(line, 1000, file);
     a = strlen(line);
     line[a - 1] = '\0';
-    strcpy(res[1], line);
+    strcpy(*(res + 1), line);
     res[1][a - 1] = '\0';
     while(fgets(line, 1000, file)){
         if(strncmp(line, "branch =", 8) == 0){
-            sscanf(line, "branch = %s", res[2]);
+            sscanf(line, "branch = %s", *(res + 2));
             fclose(file);
             return res;
         }
@@ -697,19 +710,28 @@ int run_commit(int argc, char* argv[], char* root_path) {
     char message[73];
     strcpy(message, argv[3]);
     char path[1000];
+    char path2[1000];
+    strcpy(path, root_path);
+    strcpy(path2, root_path);
+    strcat(path2, "\\.samav\\stage_copy.txt");
+    strcat(path, "\\.samav\\stage.txt");
+    if(line_counter(path) == 0){
+        fprintf(stdout, "SAMAV : There Is No File In Staging Area To Commit!\nPlease Use \'samav add (Address)\' Operation First!\n");
+        return 1;
+    } 
     
 
     int commit_ID = inc_last_commit_ID(root_path);
     if (commit_ID == -1) return 1;
-    strcpy(path, root_path);
-    strcat(path, "\\.samav\\stage.txt");
     FILE *file = fopen(path, "r");
+    FILE * file_copy = fopen(path2, "r");
     if (file == NULL) return 1;
     char line[1024];
+    char line2[1024];
     int q = 1;
-    while (fgets(line, sizeof(line), file) != NULL) {
-        printf("%s", line);
+    while (fgets(line, sizeof(line), file) && fgets(line2, sizeof(line2), file_copy)) {
         int length = strlen(line);
+        line2[strlen(line2) - 1] = '\0';
 
         // remove '\n'
         if (length > 0 && line[length - 1] == '\n') {
@@ -725,15 +747,22 @@ int run_commit(int argc, char* argv[], char* root_path) {
         }
         fprintf(stdout, "SAMAV : %d) Committed A File With Address: %s\n", q ,line);
         q++;
-        commit_staged_file(commit_ID, line, root_path);
+        commit_staged_file(commit_ID, line, root_path, line2);
         track_file(line, root_path);
     }
-    fclose(file); 
+    fclose(file);
+    fclose(file_copy);
     
     // free staging
     file = fopen(path, "w");
     if (file == NULL) return 1;
     fclose(file);
+    file_copy = fopen(path2, "w");
+    if (file == NULL) return 1;
+    fclose(file_copy);
+
+    system("rmdir /s /q adds");
+    system("mkdir adds");
 
     create_commit_file(commit_ID, message, root_path);
     fprintf(stdout, "SAMAV : Commit Was Successfully Done With Commit ID: %d\n%d File(s) Has Been Tracked!\n", commit_ID, q - 1);
@@ -780,6 +809,9 @@ bool check_file_directory_exists(char *filepath, char* root_path) {
     char alaki[1000];
     strcpy(alaki, root_path);
     strcat(alaki, "\\.samav\\files");
+    char a[1024];
+    strcpy(a, root_path);
+    strcat(a, "\\.samav");
     DIR *dir = opendir(alaki);
     struct dirent *entry;
     if (dir == NULL) {
@@ -787,29 +819,35 @@ bool check_file_directory_exists(char *filepath, char* root_path) {
         return 1;
     }
     while ((entry = readdir(dir)) != NULL) {
-        if (entry->d_type == DT_DIR && strcmp(entry->d_name, filepath) == 0) return true;
+        if (entry->d_type == DT_DIR && strcmp(entry->d_name, filepath) == 0){
+            closedir(dir);
+            chdir(a);
+            return true;
+        }
+
     }
     closedir(dir);
+
+    chdir(a);
 
     return false;
 }
 
-int commit_staged_file(int commit_ID, char* filepath, char* rootpath) {
+int commit_staged_file(int commit_ID, char* filepath, char* rootpath, char* filepath2) {
     FILE *read_file, *write_file;
     char read_path[1024];
-    strcpy(read_path, filepath);
+    strcpy(read_path, filepath2);
     char write_path[1024];
     strcpy(write_path, rootpath);
-    strcpy(write_path, "\\.samav\\files\\");
+    strcat(write_path, "\\.samav\\files\\");
     strcat(write_path, filepath);
     strcat(write_path, "\\");
     char tmp[100];
     sprintf(tmp, "%d", commit_ID);
     strcat(write_path, tmp);
-
+    strcat(write_path, ".txt");
     read_file = fopen(read_path, "r");
     if (read_file == NULL) return 1;
-
     write_file = fopen(write_path, "w");
     if (write_file == NULL) return 1;
 
@@ -827,16 +865,21 @@ int commit_staged_file(int commit_ID, char* filepath, char* rootpath) {
 
 int track_file(char *filepath, char* rootpath) {
     if (is_tracked(filepath, rootpath)) return 0;
-    strcat(rootpath, "\\.samav\\track.txt");
-    FILE *file = fopen(rootpath, "a");
+    char alaki[1000];
+    strcpy(alaki, rootpath);
+    strcat(alaki, "\\.samav\\track.txt");
+    FILE *file = fopen(alaki, "a");
     if (file == NULL) return 1;
     fprintf(file, "%s\n", filepath);
+    fclose(file);
     return 0;
 }
 
 bool is_tracked(char *filepath, char* rootpath) {
-    strcat(rootpath, "\\.samav\\track.txt"); 
-    FILE *file = fopen(rootpath, "r");
+    char alaki[1000];
+    strcpy(alaki, rootpath);
+    strcat(alaki, "\\.samav\\track.txt"); 
+    FILE *file = fopen(alaki, "r");
     if (file == NULL) return false;
     char line[1024];
     while (fgets(line, sizeof(line), file) != NULL) {
@@ -847,11 +890,10 @@ bool is_tracked(char *filepath, char* rootpath) {
             line[length - 1] = '\0';
         }
         
-        if (strcmp(line, filepath) == 0) return true;
+        if (strcmp(line, filepath) == 0) {fclose(file); return true;}
 
     }
     fclose(file); 
-
     return false;
 }
 
@@ -862,6 +904,7 @@ int create_commit_file(int commit_ID, char *message, char* rootpath) {
     char tmp[100];
     sprintf(tmp, "%d", commit_ID);
     strcat(commit_filepath, tmp);
+    strcat(commit_filepath, ".txt");
 
     FILE *file = fopen(commit_filepath, "w");
     if (file == NULL) return 1; 
@@ -870,16 +913,17 @@ int create_commit_file(int commit_ID, char *message, char* rootpath) {
     strcat(alaki, global_thing);
     strcat(alaki, "\\time.txt\"");
     system(alaki);
-    strcpy(alaki, global_thing);
-    strcat(alaki, "\\time.txt");
-    FILE* time = fopen(alaki, "r");
+    char op[1000];
+    strcpy(op, global_thing);
+    strcat(op, "\\time.txt");
+    FILE* time = fopen(op, "r");
     int hour, minute;
     fscanf(time, "%d:%d", &hour, &minute);
     fclose(time);
-    fopen(alaki, "w");
+    time = fopen(op, "w");
     fclose(time);
     fprintf(file, "message: %s\n", message);
-    fprintf(file, "%d\n", (60 * hour) + minute);
+    fprintf(file, "%d:%d, %d\n", hour , minute, (60 * hour) + minute);
     char** res = (char**) malloc(10 * sizeof(char*));
     for(int i = 0; i < 10; i++){
         *(res + i) = (char*) malloc(sizeof(char) * 100);
@@ -889,42 +933,56 @@ int create_commit_file(int commit_ID, char *message, char* rootpath) {
     fprintf(file, "%s\n", res[0]);
     fprintf(file, "%s\n", res[1]);
     fprintf(file, "files:\n");
-    DIR *dir = opendir(".");
+    
+    // char adds[1000];
+    // strcpy(adds, rootpath);
+    // strcat(adds, "\\.samav");
+    // // printf("salam\n");
+    // // chdir(adds);
+    // strcat(adds, "\\files");
+    // printf("%s\n", adds);
     struct dirent *entry;
+    DIR *dir = opendir("adds");
     if (dir == NULL) {
-        perror("Error opening current directory");
+        printf("salam\n");
+        perror("Error opening directory");
+        printf("bashe\n");
         return 1;
     }
     while ((entry = readdir(dir)) != NULL) {
-        if (entry->d_type == DT_REG && is_tracked(entry->d_name, rootpath)) {
-            int file_last_commit_ID = find_file_last_commit(entry->d_name, rootpath);
-            fprintf(file, "%s %d\n", entry->d_name, file_last_commit_ID);
-        }
+        fprintf(file, "%s: %d\n", entry->d_name, directory_reader(entry->d_name));
     }
     closedir(dir); 
     fclose(file);
+    // chdir(adds);
     return 0;
 }
 
-int find_file_last_commit(char* filepath, char* rootpath) {
-    char filepath_dir[1024];
-    strcpy(filepath_dir, rootpath);
-    strcat(filepath_dir, "\\.samav\\files\\");
-    strcat(filepath_dir, filepath);
+// Max Of A Directory Files:
+int directory_reader(char* path){
+    struct dirent *de;  // Pointer for directory entry
 
+    // opendir() returns a pointer of DIR type.
+    DIR *dr = opendir(path);
+
+    if (dr == NULL)  // opendir returns NULL if couldn't open directory
+    {
+        fprintf( stdout, "Could not open current directory\n");
+        return 0;
+    }
+
+    // for readdir()
+    int tmp; 
     int max = -1;
-    
-    DIR *dir = opendir(filepath_dir);
-    struct dirent *entry;
-    if (dir == NULL) return 1;
-
-    while((entry = readdir(dir)) != NULL) {
-        if (entry->d_type == DT_REG) {
-            int tmp = atoi(entry->d_name);
-            max = max > tmp ? max: tmp;
+    while ((de = readdir(dr)) != NULL){
+        char alaki[1000];
+        strcpy(alaki, de->d_name);
+        sscanf(alaki, "%d.txt", tmp);
+        if(tmp > max){
+            max = tmp;
         }
     }
-    closedir(dir);
+    closedir(dr);     // close directory
 
     return max;
 }
@@ -1111,8 +1169,13 @@ int main(int argc, char* argv[]){
         if(Samav_Root == NULL){fprintf(stdout ,"SAMAV : You Don't Have Any Initilized Repository. Please Use This Operation First:\nsamav init\nThen Try Again Later!"); return 1;}
         if(argc < 4){fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!"); return 1;}
         if(strlen(argv[3]) > 72){fprintf(stdout, "SAMAV : Your Message Has %d Character And It's Over Limit (72)!\nPlease Choose A Shorter Message!", strlen(argv[3])); return 1;}
+        char alaki[1000];
+        strcpy(alaki, Samav_Root);
+        strcat(alaki, "\\.samav");
+        chdir(alaki);
         return run_commit(argc, argv, Samav_Root);
     }
     
     return 0;
 }
+
