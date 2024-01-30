@@ -48,7 +48,9 @@ int find_file_last_commit(char* filepath, char* rootpath);
 int Add_to_stage_folder_mod_simple(int argc, char* argv[], char* pathfile, char* rootpath);
 int Add_to_stage_file_mod_2_simple(int argc, char* argv[], char * filepath, char* rootpath);
 int Add_to_stage_file_mod_simple(int argc, char* argv[], char * filepath, char* rootpath);
-int directory_reader(char* path);
+long long directory_reader(char* name, char* rootpath);
+void write_name_commit(char* file, char* rootpath);
+int status(int argc, char* argv[], int state, char* path);
 
 
 // How Many Lines?
@@ -491,7 +493,7 @@ int Add_to_stage_file_mod_simple(int argc, char* argv[], char * filepath, char* 
                     // copy:
                     strcpy(operation, "copy ");
                     strcat(operation, line_wild);
-                    strcat(operation, " adds");
+                    strcat(operation, " adds > NUL");
                     system(operation);
                     exist = 1;
                     fprintf(stdout, "SAMAV : File With Address: \'%s\' Has Already Been Changed Before! And Now Has Been Added!\n", line_wild);
@@ -502,7 +504,7 @@ int Add_to_stage_file_mod_simple(int argc, char* argv[], char * filepath, char* 
         if(!exist){
             fclose(file_find);
             file_find = fopen("stage.txt", "a");
-            char op[1000] = "dir /s /b ";
+            char op[1000] = "dir /s /a:-d /b ";
             strcat(op, line_wild);
             strcat(op, " >> stage_copy.txt");
             system(op);
@@ -511,7 +513,7 @@ int Add_to_stage_file_mod_simple(int argc, char* argv[], char * filepath, char* 
             file_find = fopen("stage.txt", "r");
             char operation[1000] = "copy ";
             strcat(operation, line_wild);
-            strcat(operation, " adds");
+            strcat(operation, " adds > NUL");
             system(operation);
             fprintf(stdout, "SAMAV : A File With Address: \'%s\' Has Been Added!\n", line_wild);
         }
@@ -565,7 +567,7 @@ int Add_to_stage_file_mod_2_simple(int argc, char* argv[], char * filepath, char
                 // copy:
                 strcpy(operation, "copy ");
                 strcat(operation, filepath);
-                strcat(operation, " adds");
+                strcat(operation, " adds > NUL");
                 system(operation);
                 exist = 1;
                 fprintf(stdout, "SAMAV : File With Address: \'%s\' Has Already Been Changed Before! And Now Has Been Added!\n", filepath);
@@ -576,7 +578,7 @@ int Add_to_stage_file_mod_2_simple(int argc, char* argv[], char * filepath, char
     if(!exist){
         fclose(file_find);
         file_find = fopen("stage.txt", "a");
-        char op[1000] = "dir /s /b ";
+        char op[1000] = "dir /s /a:-d /b ";
         strcat(op, fileName);
         strcat(op, " >> stage_copy.txt");
         system(op);
@@ -585,7 +587,7 @@ int Add_to_stage_file_mod_2_simple(int argc, char* argv[], char * filepath, char
         file_find = fopen("stage.txt", "r");
         char operation[1000] = "copy ";
         strcat(operation, filepath);
-        strcat(operation, " adds");
+        strcat(operation, " adds > NUL");
         system(operation);
         fprintf(stdout, "SAMAV : A File With Address: \'%s\' Has Been Added!\n", filepath);
     }
@@ -681,8 +683,10 @@ char** config_reader(char* rootpath){
     for(int i = 0; i < 10; i++){
         *(res + i) = (char*) malloc(sizeof(char) * 1000);
     }
-    strcat(rootpath, "\\.samav\\config.txt");
-    FILE* file = fopen(rootpath, "r");
+    char salam[1000];
+    strcpy(salam, rootpath);
+    strcat(salam, "\\.samav\\config.txt");
+    FILE* file = fopen(salam, "r");
     char line[1000];
     fgets(line, 1000, file);
     int a = strlen(line);
@@ -859,6 +863,10 @@ int commit_staged_file(int commit_ID, char* filepath, char* rootpath, char* file
     }
     fclose(read_file);
     fclose(write_file);
+    char ax[1000];
+    strcpy(ax, rootpath);
+    strcat(ax, "\\.samav");
+    chdir(ax);
 
     return 0;
 }
@@ -933,37 +941,49 @@ int create_commit_file(int commit_ID, char *message, char* rootpath) {
     fprintf(file, "%s\n", res[0]);
     fprintf(file, "%s\n", res[1]);
     fprintf(file, "files:\n");
+    fclose(file);
+    char ax[1000];
+    strcpy(ax, rootpath);
+    strcat(ax, "\\.samav");
+    chdir(ax);
+    write_name_commit(commit_filepath, rootpath);
     
-    // char adds[1000];
-    // strcpy(adds, rootpath);
-    // strcat(adds, "\\.samav");
-    // // printf("salam\n");
-    // // chdir(adds);
-    // strcat(adds, "\\files");
-    // printf("%s\n", adds);
+    return 0;
+}
+
+// Write in commit:
+void write_name_commit(char* file, char* rootpath){
+    FILE* fptr = fopen(file, "a");
     struct dirent *entry;
-    DIR *dir = opendir("adds");
+    struct stat st;
+    char path[1000];
+    strcpy(path, rootpath);
+    strcat(path, "\\.samav\\files");
+    DIR *dir = opendir(path);
     if (dir == NULL) {
-        printf("salam\n");
         perror("Error opening directory");
-        printf("bashe\n");
         return 1;
     }
     while ((entry = readdir(dir)) != NULL) {
-        fprintf(file, "%s: %d\n", entry->d_name, directory_reader(entry->d_name));
+        if(strcmp(entry->d_name, "..") != 0 && strcmp(entry->d_name, ".") != 0){
+            stat(entry->d_name, &st);
+            fprintf(fptr,"%s: %d\n", entry->d_name, directory_reader(entry->d_name, rootpath));
+        }
     }
     closedir(dir); 
-    fclose(file);
-    // chdir(adds);
+    fclose(fptr);
     return 0;
 }
 
 // Max Of A Directory Files:
-int directory_reader(char* path){
+long long directory_reader(char* name, char* rootpath){
     struct dirent *de;  // Pointer for directory entry
-
+    char alaki[1000];
+    strcpy(alaki, rootpath);
+    strcat(alaki, "\\.samav\\files\\");
+    strcat(alaki, name);
     // opendir() returns a pointer of DIR type.
-    DIR *dr = opendir(path);
+    DIR *dr = opendir(alaki);
 
     if (dr == NULL)  // opendir returns NULL if couldn't open directory
     {
@@ -972,14 +992,16 @@ int directory_reader(char* path){
     }
 
     // for readdir()
-    int tmp; 
-    int max = -1;
+    long long int tmp; 
+    long long int max = -1;
     while ((de = readdir(dr)) != NULL){
-        char alaki[1000];
-        strcpy(alaki, de->d_name);
-        sscanf(alaki, "%d.txt", tmp);
-        if(tmp > max){
-            max = tmp;
+        if(strcmp(de->d_name, "..") != 0 && strcmp(de->d_name, ".") != 0){
+            char alaki[1000];
+            strcpy(alaki, de->d_name);
+            sscanf(alaki, "%d.txt", &tmp);
+            if(tmp > max){
+                max = tmp;
+            }
         }
     }
     closedir(dr);     // close directory
@@ -988,6 +1010,10 @@ int directory_reader(char* path){
 }
 
 ////////////////////// ALL THE WORK WE SHOULD DO IN COMMIT : ///////////////////
+
+
+
+
 
 int main(int argc, char* argv[]){
     // Less Than 2 Inputs:
