@@ -766,6 +766,46 @@ int branch_show(int argc, char* argv[], char* root_path){
     return 0;
 }
 
+// String To Number:
+long long str_num(char* str){
+    long long int num = 0;
+    for(int i = 0; i < strlen(str); i++){
+        num *= 10;
+        num += ((int)str[i] - '0');
+    }
+    return num;
+}
+
+// Read commit:
+char** commits_reader(char* rootpath, long long int name){
+    char** res = (char**) malloc(sizeof(char*) * 5);
+    for(int i = 0; i < 5; i++){
+        *(res + i) = (char*) malloc(sizeof(char) * 1000);
+    }
+    char salam[1000];
+    strcpy(salam, rootpath);
+    strcat(salam, "\\.samav\\commits\\");
+    char tmp[100];
+    sprintf(tmp, "%lld.txt", name);
+    strcat(salam, tmp);
+    FILE* file = fopen(salam, "r");
+    char line[1000];
+    fgets(line, 1000, file);
+    fgets(line, 1000, file);
+    line[strlen(line) - 1] = '\0';
+    sscanf(line, "message: %s", *(res + 0)); // message
+    fgets(line, 1000, file);
+    fgets(line, 1000, file);
+    fgets(line, 1000, file);
+    line[strlen(line) - 1] = '\0';
+    strcpy(*(res + 1), line); // branch
+    fgets(line, 1000, file);
+    line[strlen(line) - 1] = '\0';
+    strcpy(*(res + 2), line); // name
+    fclose(file);
+    return res;
+}
+
 // read config:
 char** config_reader(char* rootpath){
     char** res = (char**) malloc(sizeof(char*) * 10);
@@ -814,6 +854,27 @@ int config_commit(char* rootpath){
     return last_commit_ID;
 }
 
+// Read Time From Commits:
+int read_time(char* rootpath, int name){
+    char salam[1000];
+    strcpy(salam, rootpath);
+    strcat(salam, "\\.samav\\commits\\");
+    char tmp[100];
+    sprintf(tmp, "%d.txt", name);
+    strcat(salam, tmp);
+    FILE* file = fopen(salam, "r");
+    char line[1000];
+    fgets(line, 1000, file);
+    fgets(line, 1000, file);
+    fgets(line, 1000, file);
+    line[strlen(line) - 1] = '\0';
+    int h, m;
+    sscanf(line, "%d:%d", &h, &m);
+    rewind(file);
+    fclose(file);
+    int alaki = h * 100 + m;
+    return alaki;
+}
 
 ////////////////////// ALL THE WORK WE SHOULD DO IN COMMIT : ///////////////////
 
@@ -1109,7 +1170,7 @@ long long directory_reader(char* name, char* rootpath){
 
     if (dr == NULL)  // opendir returns NULL if couldn't open directory
     {
-        fprintf( stdout, "Could not open current directory\n");
+        fprintf(stdout, "Could not open current directory\n");
         return 0;
     }
 
@@ -1133,6 +1194,7 @@ long long directory_reader(char* name, char* rootpath){
 
 ////////////////////// ALL THE WORK WE SHOULD DO IN COMMIT : ///////////////////
 
+// Log Functions:
 void run_log(int argc, char* argv[], char* rootpath, int current, int counter){
     if(current - counter < 999999){
         counter = current - 999999;
@@ -1181,6 +1243,122 @@ void run_log(int argc, char* argv[], char* rootpath, int current, int counter){
     }
     return;
 }
+
+void commit_in_branch(int argc, char* argv[] ,char* name, char* root_path){
+    char path[1000];
+    strcpy(path, root_path);
+    strcat(path, "\\.samav\\branches\\");
+    strcat(path, name);
+
+    struct dirent *de;
+    DIR *dr = opendir(path);
+    if (dr == NULL)  // opendir returns NULL if couldn't open directory
+    {
+        fprintf(stdout, "SAMAV : There Is No Branch With Name: \'%s\'! Please Try Again!\n", name);
+        return;
+    }
+    fprintf(stdout, "SAMAV : You Have Committed These Commits In Branch: \'%s\'\n", argv[3]);
+    int q = 1;
+    while ((de = readdir(dr)) != NULL){
+        long long int id;
+        if(strcmp(de->d_name, "..") != 0 && strcmp(de->d_name, ".") != 0){
+            char name[100];
+            strcpy(name, path);
+            strcat(name, "\\");
+            strcat(name, de->d_name);
+            sscanf(de->d_name, "%lld.txt", &id);
+            fprintf(stdout, "%dth) ID: %lld, ", q ,id);
+            q++;
+            FILE* file = fopen(name, "r");
+            char line[1000];
+            fgets(line, 1000, file);
+            fgets(line, 1000, file);
+            fprintf(stdout, line);
+            fclose(file);
+        }
+    }
+    closedir(dr);
+    return;
+}
+
+void author_in_log(int argc, char* argv[], char* name, char* root_path, int current){
+    // char** not = config_reader(root_path);
+    
+    int q = 1;
+    int is_come = 0;
+    for(long long i = current; i >= 1000000; i--){
+        char** commit = commits_reader(root_path, i);
+        if(strcmp(*(commit + 2), name) == 0){
+            is_come = 1;
+            fprintf(stdout, "%dth) ID: %lld, Message: %s\n", q, i, *(commit + 0));
+            q++;
+        }
+    }
+    if(!is_come){
+        fprintf(stdout, "SAMAV : Person With Name: \'%s\' Has Never Committed!\n",name);
+        return;
+    }
+    if(q == 2){
+        fprintf(stdout, "SAMAV : Person With Name: \'%s\' Committed Just This Commit!\n", name);
+        return;
+    }
+    fprintf(stdout, "SAMAV : Person With Name: \'%s\' Committed These %d Commits!\n", name, q - 1);
+    return;
+
+
+
+}
+
+void time_in_log(int argc, char* argv[], int time, char* root_path, int current, int state, int h, int m){
+    int is_come;
+    for(int i = current; i >= 1000000; i--){
+        int sum = read_time(root_path, i);
+        int hour = sum / 100;
+        int min = sum % 100;
+        if(time > ((60 * hour) + min)){
+            is_come = i;
+            break;
+        }
+    }
+    // Since:
+    if(state == 1){
+        int q = 1;
+        for(int j = current; j > is_come; j--){
+            int sum = read_time(root_path, j);
+            int min = sum % 100;
+            int hour = sum / 100;
+            fprintf(stdout, "%2dth) ID: %d, Time: %2d:%2d\n", q, j, hour, min);
+            q++;
+        }
+        if(q == 1){
+            fprintf(stdout, "SAMAV : You Haven't Committed Since: %d:%d !\n", h, m);
+            return;
+        }
+        fprintf(stdout, "SAMAV : You Have Committed This(These) Commit(s) Since: %d:%d\n", h, m);
+        return;
+    }
+    // Before:
+    else{
+        int q = 1; 
+        for(int j = is_come; j > 1000000; j--){
+            int sum = read_time(root_path, j);
+            int min = sum % 100;
+            int hour = sum / 100;
+            fprintf(stdout, "%2dth) ID: %d, Time: %2d:%2d\n", q, j, hour, min);
+            q++;
+        }
+        if(q == 1){
+            fprintf(stdout, "SAMAV : You Haven't Committed Before: %2d:%2d !\n", h, m);
+            return;
+        }
+        fprintf(stdout, "SAMAV : You Have Committed This(These) Commit(s) Before: %2d:%2d\n", h, m);
+        return;
+    }
+}
+
+
+
+
 
 
 
@@ -1372,24 +1550,46 @@ int main(int argc, char* argv[]){
         chdir(alaki);
         return run_commit(argc, argv, Samav_Root);
     }
-    else  if(strcmp(argv[1], "log") == 0){
+    else if(strcmp(argv[1], "log") == 0){
         if(Samav_Root == NULL){fprintf(stdout ,"SAMAV : You Don't Have Any Initilized Repository. Please Use This Operation First:\nsamav init\nThen Try Again Later!"); return 1;}
         if(argc == 2){
+            printf("salam\n");
             run_log(argc, argv, Samav_Root, last_commit, last_commit - 999999);
             return 0;
         }
         if(strcmp(argv[2], "-n") == 0){
-            run_log(argc, argv, Samav_Root, last_commit, (int)argv[3]);
+            int num = str_num(argv[3]);
+            run_log(argc, argv, Samav_Root, last_commit, num);
             return 0;
         }
         if(strcmp(argv[2], "-branch") == 0){
-
+            if(argc != 4){fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!"); return 1;}
+            commit_in_branch(argc, argv, argv[3], Samav_Root);
             return 0;
         }
-        
+        if(strcmp(argv[2], "-author") == 0){
+            if(argc != 4){fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!"); return 1;}
+            author_in_log(argc, argv, argv[3], Samav_Root, last_commit);
+            return 0;
+        }
+        if(strcmp(argv[2], "-since") == 0){
+            int h, m;
+            sscanf(argv[3], "%d:%d", &h, &m);
+            int sum = (60 * h) + m;
+            time_in_log(argc, argv, sum, Samav_Root, last_commit, 1, h, m);
+            return 0;
+        }
+        if(strcmp(argv[2], "-before") == 0){
+            int h, m;
+            sscanf(argv[3], "%d:%d", &h, &m);
+            int sum = (60 * h) + m;
+            time_in_log(argc, argv, sum, Samav_Root, last_commit, 2, h, m);
+            return 0;
+        }
+
         
     }
-    else  if(strcmp(argv[1], "branch") == 0){
+    else if(strcmp(argv[1], "branch") == 0){
         if(Samav_Root == NULL){fprintf(stdout ,"SAMAV : You Don't Have Any Initilized Repository. Please Use This Operation First:\nsamav init\nThen Try Again Later!"); return 1;}
         if(argc == 3){
             return branch_maker(argc, argv, Samav_Root);
