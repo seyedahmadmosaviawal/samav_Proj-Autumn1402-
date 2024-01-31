@@ -792,8 +792,12 @@ char** commits_reader(char* rootpath, long long int name){
     char line[1000];
     fgets(line, 1000, file);
     fgets(line, 1000, file);
-    line[strlen(line) - 1] = '\0';
-    sscanf(line, "message: %s", *(res + 0)); // message
+
+    for(int i = 9; i < strlen(line) - 1; i++){
+        *(*(res + 0) + (i - 9)) = line[i];
+    }
+    *(*(res + 0) + (strlen(line) - 10)) = '\0';
+    // printf("%s\n", *(res + 0));
     fgets(line, 1000, file);
     fgets(line, 1000, file);
     fgets(line, 1000, file);
@@ -1356,8 +1360,47 @@ void time_in_log(int argc, char* argv[], int time, char* root_path, int current,
     }
 }
 
-
-
+void search_message(int argc, char* argv[], int current, char* root_path){
+    int q = 1;
+    int is = 0;
+    for(int i = current;  i >= 1000000; i--){
+        char path[1000];
+        strcpy(path, root_path);
+        strcat(path, "\\.samav\\commits\\");
+        char tmp[100];
+        sprintf(tmp, "%d.txt", i);
+        strcat(path, tmp);
+        char** alk = commits_reader(root_path, i);
+        for(int j = 3; j < argc; j++){
+            char* salam = strstr(*(alk + 0) ,argv[j]);
+            if(salam != NULL){
+                is = 1;
+                fprintf(stdout, "%2dth) ID: %d, Message: ", q, i);
+                q++;
+                for(int w = 0; w < ((int)(salam - *(alk + 0))); w++){
+                    fprintf(stdout, "%c", *(*(alk + 0) + w));
+                }
+                fprintf(stdout, "<<");
+                for(int w = 0; w < strlen(argv[j]); w++){
+                    fprintf(stdout, "%c", argv[j][w]);
+                }
+                fprintf(stdout, ">>");
+                for(int w = strlen(argv[j]); w < strlen(salam); w++){
+                    fprintf(stdout, "%c", *(salam + w));
+                }
+                fprintf(stdout, "\n");
+                break;
+            }
+        }
+    }
+    if(!is){
+        fprintf(stdout, "SAMAV : This(These) Word(s) Were Not Found In The Message Of Any Of The Commit(s)!\n");
+        return;
+    }
+    fprintf(stdout, "SAMAV : This(These) Word(s) Were Found In Message Of %d Commit(s)!\n", q - 1);
+    return;
+}
+// Log Functions:
 
 
 
@@ -1365,12 +1408,12 @@ void time_in_log(int argc, char* argv[], int time, char* root_path, int current,
 int main(int argc, char* argv[]){
     // Less Than 2 Inputs:
     if (argc < 2){
-        fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!");
+        fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!\n");
         return 1;
     }
 
     char Current[1024];
-    if(getcwd(Current, sizeof(Current)) == NULL) {fprintf(stdout, "SAMAV : There Is An Unknown Error Please Try Again!"); return 1;}
+    if(getcwd(Current, sizeof(Current)) == NULL) {fprintf(stdout, "SAMAV : There Is An Unknown Error Please Try Again!\n"); return 1;}
     char* Samav_Root;
     Samav_Root = samav_exist(argc, argv);
     char** config = config_reader(Samav_Root);
@@ -1420,9 +1463,14 @@ int main(int argc, char* argv[]){
                     fclose(file_1);
                     file_1 = fopen("track.txt", "w");
                     fclose(file_1);
+                    file_1 = fopen("stage_copy.txt", "w");
+                    fclose(file_1);
                     mkdir("adds");
                     mkdir("commits");
                     mkdir("files");
+                    mkdir("branches");
+                    chdir("branches");
+                    mkdir("master");
                     chdir(global_thing);
                     file_1 = fopen("config_local.txt", "w");
                     fprintf(file_1, "name:\nemail:\n");
@@ -1448,9 +1496,14 @@ int main(int argc, char* argv[]){
                 fclose(file_1);
                 file_1 = fopen("track.txt", "w");
                 fclose(file_1);
+                file_1 = fopen("stage_copy.txt", "w");
+                fclose(file_1);
                 mkdir("commits");
                 mkdir("adds");
                 mkdir("files");
+                mkdir("branches");
+                chdir("branches");
+                mkdir("master");
                 chdir(global_thing);
                 file_1 = fopen("config_local.txt", "w");
                 fprintf(file_1, "name:\nemail:\n");
@@ -1471,12 +1524,66 @@ int main(int argc, char* argv[]){
             if(strcmp(argv[3], "user.name") == 0){
                 if(!global_writter(argc, argv, 1, argv[4], 1))
                 fprintf(stdout, "SAMAV : A Global Name: \"%s\" Has Been Saved Successfully!", argv[4]);
+                if(Samav_Root != NULL){
+                    char ds[1000];
+                    char ds_cpy[1000];
+                    strcpy(ds, Samav_Root);
+                    strcpy(ds_cpy, Samav_Root);
+                    strcat(ds_cpy, "\\.samav\\config_cpy.txt");
+                    strcat(ds, "\\.samav\\config.txt");
+                    FILE* file = fopen(ds, "r");
+                    FILE* file_cpy = fopen(ds_cpy, "w");
+                    char line[1000];
+                    fgets(line, 1000, file);
+                    fprintf(file_cpy, argv[4]);
+                    fprintf(file_cpy, "\n");
+                    while(fgets(line, 1000, file)){
+                        fprintf(file_cpy, line);
+                    }
+                    fclose(file);
+                    fclose(file_cpy);
+                    strcpy(line, "del ");
+                    strcat(line, ds);
+                    system(line);
+                    strcpy(line, "rename ");
+                    strcat(line, ds_cpy);
+                    strcat(line, " config.txt");
+                    system(line);
+                }
                 return 0;
             }
             // User.Email:
             if(strcmp(argv[3], "user.email") == 0){
                 if(!global_writter(argc, argv, 2, argv[4], 1))
                 fprintf(stdout, "SAMAV : A Global Email: \"%s\" Has Been Saved Successfully!", argv[4]);
+                if(Samav_Root != NULL){
+                    char ds[1000];
+                    char ds_cpy[1000];
+                    strcpy(ds, Samav_Root);
+                    strcpy(ds_cpy, Samav_Root);
+                    strcat(ds_cpy, "\\.samav\\config_cpy.txt");
+                    strcat(ds, "\\.samav\\config.txt");
+                    FILE* file = fopen(ds, "r");
+                    FILE* file_cpy = fopen(ds_cpy, "w");
+                    char line[1000];
+                    fgets(line, 1000, file);
+                    fprintf(file_cpy, line);
+                    fgets(line, 1000, file);
+                    fprintf(file_cpy, argv[4]);
+                    fprintf(file_cpy, "\n");
+                    while(fgets(line, 1000, file)){
+                        fprintf(file_cpy, line);
+                    }
+                    fclose(file);
+                    fclose(file_cpy);
+                    strcpy(line, "del ");
+                    strcat(line, ds);
+                    system(line);
+                    strcpy(line, "rename ");
+                    strcat(line, ds_cpy);
+                    strcat(line, " config.txt");
+                    system(line);
+                }
                 return 0;
             }
             // Alias:
@@ -1492,12 +1599,66 @@ int main(int argc, char* argv[]){
             if(strcmp(argv[2], "user.name") == 0){
                 if(!global_writter(argc, argv, 1, argv[3], 0))
                 fprintf(stdout, "SAMAV : A Local Name: \"%s\" Has Been Saved Successfully!", argv[3]);
+                if(Samav_Root != NULL){
+                    char ds[1000];
+                    char ds_cpy[1000];
+                    strcpy(ds, Samav_Root);
+                    strcpy(ds_cpy, Samav_Root);
+                    strcat(ds_cpy, "\\.samav\\config_cpy.txt");
+                    strcat(ds, "\\.samav\\config.txt");
+                    FILE* file = fopen(ds, "r");
+                    FILE* file_cpy = fopen(ds_cpy, "w");
+                    char line[1000];
+                    fgets(line, 1000, file);
+                    fprintf(file_cpy, argv[3]);
+                    fprintf(file_cpy, "\n");
+                    while(fgets(line, 1000, file)){
+                        fprintf(file_cpy, line);
+                    }
+                    fclose(file);
+                    fclose(file_cpy);
+                    strcpy(line, "del ");
+                    strcat(line, ds);
+                    system(line);
+                    strcpy(line, "rename ");
+                    strcat(line, ds_cpy);
+                    strcat(line, " config.txt");
+                    system(line);
+                }
                 return 0;
             }
             // User.Email:
             if(strcmp(argv[2], "user.email") == 0){
                 if(!global_writter(argc, argv, 2, argv[3], 0))
                 fprintf(stdout, "SAMAV : A Local Email: \"%s\" Has Been Saved Successfully!", argv[3]);
+                if(Samav_Root != NULL){
+                    char ds[1000];
+                    char ds_cpy[1000];
+                    strcpy(ds, Samav_Root);
+                    strcpy(ds_cpy, Samav_Root);
+                    strcat(ds_cpy, "\\.samav\\config_cpy.txt");
+                    strcat(ds, "\\.samav\\config.txt");
+                    FILE* file = fopen(ds, "r");
+                    FILE* file_cpy = fopen(ds_cpy, "w");
+                    char line[1000];
+                    fgets(line, 1000, file);
+                    fprintf(file_cpy, line);
+                    fgets(line, 1000, file);
+                    fprintf(file_cpy, argv[3]);
+                    fprintf(file_cpy, "\n");
+                    while(fgets(line, 1000, file)){
+                        fprintf(file_cpy, line);
+                    }
+                    fclose(file);
+                    fclose(file_cpy);
+                    strcpy(line, "del ");
+                    strcat(line, ds);
+                    system(line);
+                    strcpy(line, "rename ");
+                    strcat(line, ds_cpy);
+                    strcat(line, " config.txt");
+                    system(line);
+                }
                 return 0;
             }
             // Alias:
@@ -1550,6 +1711,8 @@ int main(int argc, char* argv[]){
         chdir(alaki);
         return run_commit(argc, argv, Samav_Root);
     }
+    
+    // LOG:
     else if(strcmp(argv[1], "log") == 0){
         if(Samav_Root == NULL){fprintf(stdout ,"SAMAV : You Don't Have Any Initilized Repository. Please Use This Operation First:\nsamav init\nThen Try Again Later!"); return 1;}
         if(argc == 2){
@@ -1573,6 +1736,7 @@ int main(int argc, char* argv[]){
             return 0;
         }
         if(strcmp(argv[2], "-since") == 0){
+            if(argc != 4){fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!"); return 1;}
             int h, m;
             sscanf(argv[3], "%d:%d", &h, &m);
             int sum = (60 * h) + m;
@@ -1580,15 +1744,23 @@ int main(int argc, char* argv[]){
             return 0;
         }
         if(strcmp(argv[2], "-before") == 0){
+            if(argc != 4){fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!"); return 1;}
             int h, m;
             sscanf(argv[3], "%d:%d", &h, &m);
             int sum = (60 * h) + m;
             time_in_log(argc, argv, sum, Samav_Root, last_commit, 2, h, m);
             return 0;
         }
+        if(strcmp(argv[2], "-search") == 0){
+            if(argc < 4){fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!"); return 1;}
+            search_message(argc, argv, last_commit, Samav_Root);
+            return 0;
+        }
 
         
     }
+    
+    // Branch:
     else if(strcmp(argv[1], "branch") == 0){
         if(Samav_Root == NULL){fprintf(stdout ,"SAMAV : You Don't Have Any Initilized Repository. Please Use This Operation First:\nsamav init\nThen Try Again Later!"); return 1;}
         if(argc == 3){
@@ -1597,13 +1769,9 @@ int main(int argc, char* argv[]){
         if(argc == 2){
             return branch_show(argc, argv, Samav_Root);
         }
+        else{fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!"); return 1;}
     }
 
     
     return 0;
 }
-
-
-
-
-
