@@ -53,6 +53,12 @@ int Add_to_stage_file_mod_simple(int argc, char* argv[], char * filepath, char* 
 int directory_reader(char* name, char* rootpath);
 void write_name_commit(char* file, char* rootpath);
 int status(int argc, char* argv[], int state, char* path);
+int reset_folder_mod_simple(int argc, char* argv[], char* pathfile, char* rootpath);
+void delete_reset(char* path, char* root_path);
+int reset_file_mod_simple(int argc, char* argv[], char * filepath, char* rootpath);
+int undo_reset(int argc, char* argv[], char* rootpath);
+int reset_undo_last_a(int argc, char* argv[], char* rootpath);
+int reset_file_mod_2_simple(int argc, char* argv[], char * filepath, char* rootpath);
 
 
 // How Many Lines?
@@ -161,6 +167,7 @@ char* samav_exist(int argc, char* argv[]) {
 
     } while (strcmp(tmp_cwd, "C:\\") != 0);
     free(tmp_cpy);
+
     return NULL;
 }
 
@@ -472,57 +479,6 @@ int Add_to_stage_file_mod_simple(int argc, char* argv[], char * filepath, char* 
                 fprintf(stdout , "SAMAV : File With Address: \'%s\' Exists! Please Use Commit Operation!\n", line_wild);
                 exist = 1;
                 break;
-                // int i = strlen(line_wild) - 1;
-                // int j = 0;
-                // char nothing[100];
-                // while(line_wild[i] != '\\'){
-                //     nothing[j] = line_wild[i];
-                //     i--;
-                //     j++;
-                // }
-                // char nothing2[100];
-                // for(int i = 0; i < j; i++){
-                //     nothing2[i] = nothing[j - i - 1];
-                // }
-                // nothing2[j] = '\0';
-
-
-                // char path_nothing[1000] = "adds\\";
-                // strcat(path_nothing, line_wild);
-                // if(check_difference(line_wild, path_nothing) == 1){
-                //     fprintf(stdout , "SAMAV : File With Address: \'%s\' Exists! Please Use Commit Operation!\n", line_wild);
-                //     exist = 1;
-                //     break;
-                // }
-                // else{
-                //     // Delete:
-                //     chdir("adds");
-                //     char operation[1000] = "del ";
-                //     // int i = strlen(line_wild) - 1;
-                //     // int j = 0;
-                //     // char nothing[100];
-                //     // while(line_wild[i] != '\\'){
-                //     //     nothing[j] = line_wild[i];
-                //     //     i--;
-                //     //     j++;
-                //     // }
-                //     // char nothing2[100];
-                //     // for(int i = 0; i < j; i++){
-                //     //     nothing2[i] = nothing[j - i - 1];
-                //     // }
-                //     // nothing2[j] = '\0';
-                //     strcat(operation, wildcard);
-                //     system(operation);
-                //     chdir("..");
-                //     // copy:
-                //     strcpy(operation, "copy ");
-                //     strcat(operation, line_wild);
-                //     strcat(operation, " adds > NUL");
-                //     system(operation);
-                //     exist = 1;
-                //     fprintf(stdout, "SAMAV : File With Address: \'%s\' Has Already Been Changed Before! And Now Has Been Added!\n", line_wild);
-                //     break;
-                // }
             }
         }
         if(!exist){
@@ -752,16 +708,214 @@ int Add_with_depth(int argc, char* argv[], int depth, char* folderpath, char* ro
     return 0;
 }
 
-///////////// ADD IS DONE! ////////
+///////////// ADD IS DONE! ////////////
 
-//// Reset Functions:
 
-int undo_reset(int argc, char* argv[], char* rootpath, char* filepath){
-
+//// Reset Functions: ///////
+int reset_undo_last_a(int argc, char* argv[], char* rootpath){
+    char path[1000];
+    strcpy(path, rootpath);
+    strcat(path, "\\stage.txt");
+    int a = line_counter(path);
+    FILE* file = fopen(path, "r");
+    char line[1000];
+    int where = 1;
+    for(int i = 1; i < a ; i++){
+        fgets(line, 1000, file);
+        if(strcmp(line, "a\n") == 0){
+            fgets(line, 1000, file);
+            i++;
+            if(strcmp(line, "a\n") != 0){
+                where = i - 1;
+            }
+        }
+    }
+    rewind(file);
+    fclose(file);
+    return where;
 }
 
 
+int undo_reset(int argc, char* argv[], char* rootpath){
+    int where = reset_undo_last_a(argc, argv, rootpath);
+    char line[1000];
+    char path[1000];
+    strcpy(path, rootpath);
+    strcat(path, "\\stage.txt");
+    FILE* file = fopen(path, "r");
+    for(int i = 1; i < where; i++){
+        fgets(line, 1000, file);
+    }
 
+    FILE* file3 = fopen("alaki.txt", "w");
+    while(fgets(line, 1000, file)){
+        if(strcmp(line, "a\n") != 0){
+            fprintf(file3, line);
+        }
+    }
+    fclose(file);
+    fclose(file3);
+    file3 = fopen("alaki.txt", "r");
+    int is = 0;
+    while(fgets(line, 1000, file3)){
+        is = 1;
+        line[strlen(line) - 1] = '\0';
+        reset_file_mod_2_simple(argc, argv, line, rootpath);
+    }
+    fclose(file3);
+    system("del alaki.txt");
+    if(!is){
+        fprintf(stdout, "SAMAV : There Is No File(s) In Staging Area Please Try Again!");
+    }
+    return 0;
+}
+
+void delete_reset(char* path, char* root_path){
+    char first[1000];
+    strcpy(first, root_path);
+    strcat(first, "\\stage.txt");
+    char second[1000];
+    strcpy(second, root_path);
+    strcat(second, "\\stage_1.txt");
+    FILE* file_1 = fopen(first, "r");
+    FILE* file_2 = fopen(second, "w");
+    char line[1000];
+    while(fgets(line, 1000, file_1)){
+        line[strlen(line) - 1] = '\0';
+        if(strstr(path, line) == NULL){
+            fprintf(file_2, line);
+            fprintf(file_2, "\n");
+        }
+    }
+    fclose(file_1);
+    fclose(file_2);
+    char op[1000] = "del \"";
+    strcat(op, first);
+    strcat(op, "\"");
+    system(op);
+    strcpy(op, "rename \"");
+    strcat(op, second);
+    strcat(op, "\" stage.txt");
+    system(op);
+    //second:
+    strcpy(first, root_path);
+    strcat(first, "\\stage_copy.txt");
+    strcpy(second, root_path);
+    strcat(second, "\\stage_copy_1.txt");
+    file_1 = fopen(first, "r");
+    file_2 = fopen(second, "w");
+    while(fgets(line, 1000, file_1)){
+        if(strstr(line, path) == NULL){
+            fprintf(file_2, line);
+        }
+    }
+    fclose(file_1);
+    fclose(file_2);
+    char oper[1000] = "del \"";
+    strcat(oper, first);
+    strcat(oper, "\"");
+    system(oper);
+    strcpy(oper, "rename \"");
+    strcat(oper, second);
+    strcat(oper, "\" stage_copy.txt");
+    system(oper);
+    return;
+}
+
+int reset_file_mod_simple(int argc, char* argv[], char * filepath, char* rootpath){
+    if(is_wild(filepath) == 0 && Is_Directory(filepath) == 1){
+        return reset_folder_mod_simple(argc, argv, filepath, rootpath);
+    }
+    char wildcard[1000] = "dir /b ";
+    strcat(wildcard, filepath);
+    strcat(wildcard, " >>");
+    strcat(wildcard, " wildcard.txt");
+    system(wildcard);
+    FILE* file_read = fopen("wildcard.txt", "r");
+    char line_wild[1024];
+    // MAIN LOOP:
+    while(fgets(line_wild, 1024, file_read)){
+        line_wild[strlen(line_wild) - 1] = '\0';
+
+        if(Is_Directory(line_wild) == 1){
+            reset_folder_mod_simple(argc, argv, line_wild, rootpath);
+            continue;
+        }
+        if(!is_staged(line_wild, rootpath)){
+            fprintf(stdout, "SAMAV : File With Address: \'%s\' Is Not Staged Yet! You Can't Use Reset Operation For This File!\n", line_wild);
+            continue;
+        }
+        else{
+            delete_reset(line_wild, rootpath);
+            char alaki[1000] = "del \"";
+            strcat(alaki, rootpath);
+            strcat(alaki, "\\adds\\");
+            strcat(alaki, line_wild);
+            strcat(alaki, "\"");
+            system(alaki);
+            fprintf(stdout, "SAMAV : File With Address: \'%s\' Has Been Deleted From Staging Area!\n", line_wild);
+        }
+    }
+    fclose(file_read);
+    system("del wildcard.txt");
+    return 0;
+}
+
+// version2:
+int reset_file_mod_2_simple(int argc, char* argv[], char * filepath, char* rootpath){
+        if(!is_staged(filepath, rootpath)){
+            fprintf(stdout, "SAMAV : File With Address: \'%s\' Is Not Staged Yet! You Can't Use Reset Operation For This File!\n", filepath);
+        }
+        else{
+            delete_reset(filepath, rootpath);
+            char alaki[1000] = "del \"";
+            strcat(alaki, rootpath);
+            strcat(alaki, "\\adds\\");
+            strcat(alaki, filepath);
+            strcat(alaki, "\"");
+            system(alaki);
+            fprintf(stdout, "SAMAV : File With Address: \'%s\' Has Been Deleted From Staging Area!\n", filepath);
+        }
+    return 0;
+}
+
+int reset_folder_mod_simple(int argc, char* argv[], char* pathfile, char* rootpath){
+    DIR *dir;
+    struct dirent *entry;
+
+    // Replace "directory_path" with the actual directory path you want to read
+    dir = opendir(pathfile);
+
+    if (dir == NULL) {
+        perror("SAMAV : Error Opening Directory!");
+        return 1;
+    }
+
+    int is_come = 0;
+    while ((entry = readdir(dir)) != NULL) {
+        if(strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0){
+            is_come = 1;
+            char address[1000];
+            strcpy(address, pathfile);
+            strcat(address, "\\");
+            strcat(address, entry->d_name);
+            if(Is_Directory(address) == 1){
+                reset_folder_mod_simple(argc, argv, address, rootpath);
+            }
+            else{
+                char* alaki = end(argc, argv, address);
+                reset_file_mod_2_simple(argc, argv, alaki, rootpath);    
+            }
+        }
+    }
+    if(!is_come){
+        fprintf(stdout, "SAMAV : Folder With Address: \'%s\' Is Empty!\n", pathfile);
+    }
+
+    closedir(dir);
+    return 0;
+}
+///// RESET functions DONE! ////////
 
 // Status:
 int status(int argc, char* argv[], int state, char* path){
@@ -1026,6 +1180,7 @@ int run_commit(int argc, char* argv[], char* root_path) {
     while (fgets(line, sizeof(line), file) && fgets(line2, sizeof(line2), file_copy)) {
         int length = strlen(line);
         line2[strlen(line2) - 1] = '\0';
+        if(strcmp(line2, "a") == 0){continue;}
 
         // remove '\n'
         if (length > 0 && line[length - 1] == '\n') {
@@ -1851,20 +2006,25 @@ int main(int argc, char* argv[]){
     else if(strcmp(argv[1], "reset") == 0){
         if(Samav_Root == NULL){fprintf(stdout ,"SAMAV : You Don't Have Any Initilized Repository. Please Use This Operation First:\nsamav init\nThen Try Again Later!"); return 1;}
         if(argc < 3){fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!"); return 1;}
+        strcat(Samav_Root, "\\.samav");
+        chdir(Samav_Root);
         if(strcmp(argv[2], "-undo") == 0){
-
+            undo_reset(argc, argv, Samav_Root);
             return 0;
         }
         else if(strcmp(argv[2], "-f") == 0){
-
+            for(int i = 3; i < argc; i++){
+                reset_file_mod_simple(argc, argv, argv[i], Samav_Root);
+            }
             return 0;
         }
         else{
-
+            reset_file_mod_simple(argc, argv, argv[2], Samav_Root);
             return 0;
         }
     }
-
+    
+    // All The samav commit:
     else if(strcmp(argv[1], "commit") == 0){
         if(Samav_Root == NULL){fprintf(stdout ,"SAMAV : You Don't Have Any Initilized Repository. Please Use This Operation First:\nsamav init\nThen Try Again Later!"); return 1;}
         if(argc < 4){fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!"); return 1;}
@@ -1876,7 +2036,7 @@ int main(int argc, char* argv[]){
         return run_commit(argc, argv, Samav_Root);
     }
     
-    // LOG:
+    // All the samav log:
     else if(strcmp(argv[1], "log") == 0){
         if(Samav_Root == NULL){fprintf(stdout ,"SAMAV : You Don't Have Any Initilized Repository. Please Use This Operation First:\nsamav init\nThen Try Again Later!"); return 1;}
         if(argc == 2){
@@ -1924,7 +2084,7 @@ int main(int argc, char* argv[]){
         
     }
     
-    // Branch:
+    // All The samav branch:
     else if(strcmp(argv[1], "branch") == 0){
         if(Samav_Root == NULL){fprintf(stdout ,"SAMAV : You Don't Have Any Initilized Repository. Please Use This Operation First:\nsamav init\nThen Try Again Later!"); return 1;}
         if(argc == 3){
