@@ -926,6 +926,17 @@ void status_file(int argc, char* argv[], char* path, char* rootpath){
     char* alaki = end(argc, argv, path);
     int state = is_staged(alaki, rootpath);
     int max = directory_reader(alaki, rootpath); // -2: add, else: M?
+    
+    if(max == -2){
+        if(state == 1){
+            fprintf(stdout, "SAMAV : File: \'%s\', +A\n", path);
+            return;
+        }
+        else{
+            fprintf(stdout, "SAMAV : File: \'%s\', -A\n", path);
+            return;
+        }
+    }
     char way[1000];
     strcpy(way, rootpath);
     strcat(way, "\\.samav\\files\\");
@@ -973,27 +984,15 @@ void status_file(int argc, char* argv[], char* path, char* rootpath){
     fclose(file);
     fclose(file_2);
     if(state == 1){
-        if(max == -2){
-            fprintf(stdout, "SAMAV : File: \'%s\', +A\n", path);
+        if(mod == 0){
+            fprintf(stdout, "SAMAV : File: \'%s\', +M\n", path);
             return;
-        }
-        else{
-            if(mod == 1){
-                fprintf(stdout, "SAMAV : File: \'%s\', +M\n", path);
-                return;
-            }
         }
     }
     else{
-        if(max == -2){
-            fprintf(stdout, "SAMAV : File: \'%s\', -A\n", path);
+        if(mod == 0){
+            fprintf(stdout, "SAMAV : File: \'%s\', -M\n", path);
             return;
-        }
-        else{
-            if(mod == 0){
-                fprintf(stdout, "SAMAV : File: \'%s\', -M\n", path);
-                return;
-            }
         }
     }
 }
@@ -1012,7 +1011,7 @@ int folder_reader(int argc, char* argv[], char* pathfile, char* rootpath){
 
     int is_come = 0;
     while ((entry = readdir(dir)) != NULL) {
-        if(strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0 && strcmp(entry->d_name, "adds") != 0 && strcmp(entry->d_name, "config.txt") != 0 && strcmp(entry->d_name, "stage.txt") != 0 && strcmp(entry->d_name, "stage_copy.txt") != 0 && strcmp(entry->d_name, "branches") != 0 && strcmp(entry->d_name, "commits") != 0 && strcmp(entry->d_name, "files") != 0 && strcmp(entry->d_name, "track.txt") != 0){
+        if(strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0 && strcmp(entry->d_name, "adds") != 0 && strcmp(entry->d_name, "config.txt") != 0 && strcmp(entry->d_name, "stage.txt") != 0 && strcmp(entry->d_name, "stage_copy.txt") != 0 && strcmp(entry->d_name, "branches") != 0 && strcmp(entry->d_name, "commits") != 0 && strcmp(entry->d_name, "files") != 0 && strcmp(entry->d_name, "track.txt") != 0 && strcmp(entry->d_name, "tags") != 0){
             is_come = 1;
             char address[1000];
             strcpy(address, pathfile);
@@ -1723,6 +1722,7 @@ int directory_reader(char* name, char* rootpath){
 
     if (dr == NULL)  // opendir returns NULL if couldn't open directory
     {
+        closedir(dr);
         return -2;
     }
 
@@ -1987,7 +1987,6 @@ void cop_check(int which, char* what, char* rootpath){
     return;
 }
 
-
 void run_check(int argc, char* argv[], char* rootpath, int che){
     char alaki[1000];
     strcpy(alaki, rootpath);
@@ -2059,6 +2058,151 @@ void run_check(int argc, char* argv[], char* rootpath, int che){
 }
 // CHECKout Functions! /////////
 
+
+// Tag functions: ///////
+char** config_tag_read(char* rootpath){
+    char** res = (char**) malloc(sizeof(char*) * 10);
+    for(int i = 0; i < 10; i++){
+        *(res + i) = (char*) malloc(sizeof(char) * 1000);
+    }
+    char salam[1000];
+    strcpy(salam, rootpath);
+    strcat(salam, "\\.samav\\config.txt");
+    FILE* file = fopen(salam, "r");
+    char line[1000];
+    fgets(line, 1000, file);
+    int a = strlen(line);
+    line[a - 1] = '\0';
+    strcpy(*(res + 0), line); //name
+    res[0][a - 1] = '\0';
+    fgets(line, 1000, file);
+    a = strlen(line);
+    line[a - 1] = '\0';
+    strcpy(*(res + 1), line); //email
+    res[1][a - 1] = '\0';
+    while(fgets(line, 1000, file)){
+        if(strncmp(line, "current_commit_id:", 18) == 0){
+            sscanf(line, "current_commit_id: %s", *(res + 2)); // current
+            fclose(file);
+            return res;
+        }
+    }
+}
+
+void tag_maker(int argc, char* argv[], int state, char** tag, char* message, char* rootpath){
+    char whe[1000];
+    strcpy(whe, rootpath);
+    strcat(whe, "\\.samav\\tags");
+    DIR *dir;
+    struct dirent *entry;
+
+    // Replace "directory_path" with the actual directory path you want to read
+    dir = opendir(whe);
+
+    if (dir == NULL) {
+        perror("SAMAV : Error Opening Directory!");
+        return;
+    }
+
+    int is = 0;
+    while ((entry = readdir(dir)) != NULL) {
+        if(strncmp(entry->d_name, argv[3], strlen(argv[3])) == 0){
+            if(!state){
+                fprintf(stdout, "SAMAV : A Tag With Name: \'%s\' is Already Exists! Please Choose A Different Name!\n", argv[3]);
+                return 1;
+            }
+            else{
+                is = 1;
+                break;
+            }
+        }
+    }
+    closedir(dir);
+    strcat(whe, "\\");
+    strcat(whe, argv[3]);
+    strcat(whe, ".txt");
+    FILE* file = fopen(whe, "w");
+    fprintf(file, "Commit: %s\n", *(tag + 2));
+    fprintf(file, "Author: %s <%s>\n", *(tag + 0), *(tag + 1));
+    time_t currentTime;
+    struct tm *localTime;
+
+    time(&currentTime);
+    localTime = localtime(&currentTime);
+    fprintf(file, "Date: %s", asctime(localTime));
+    fprintf(file, "Message: %s\n", message);
+    fclose(file);
+    if(is){
+        fprintf(stdout, "SAMAV : A Tag With Name: \'%s\' Has Been Overwrited!\n", argv[3]);
+    }
+    else{
+        fprintf(stdout, "SAMAV : A Tag With Name: \'%s\' Has Been Saved!\n", argv[3]);
+    }
+    return;
+}
+
+int compareStrings(const void *a, const void *b) {
+    return strcmp(*(const char **)a, *(const char **)b);
+}
+
+void tag_name(int argc, char* argv[], char* rootpath){
+    char whe[1000];
+    strcpy(whe, rootpath);
+    strcat(whe, "\\.samav\\tags");
+    DIR *dir;
+    struct dirent *entry;
+
+    // Replace "directory_path" with the actual directory path you want to read
+    dir = opendir(whe);
+
+    if (dir == NULL) {
+        perror("SAMAV : Error Opening Directory!");
+        return;
+    }
+
+    int is = 0;
+    char** name = (char**) malloc(sizeof(char*) * 20);
+    for(int i = 0; i < 100; i++){
+        *(name + i) = (char*) malloc(sizeof(char) * 100);
+    }
+    int i = 0;
+    while ((entry = readdir(dir)) != NULL) {
+        if(strcmp(entry->d_name, "..") != 0 && strcmp(entry->d_name, ".") != 0){
+            char alaki[1000];
+            strcpy(alaki, entry->d_name);
+            strncpy(*(name + i), alaki, strlen(alaki) - 4);
+            name[i][strlen(alaki) - 4] = '\0';
+            i++;
+        }
+    }
+    qsort(name, i, sizeof(char *), compareStrings);
+    for(int j = 0; j < i; j++){
+        fprintf(stdout, "%2dth) %s\n", j + 1,  name[j]);
+    }
+    fprintf(stdout ,"____________________________________________________________\n");
+    fprintf(stdout, "SAMAV : You Have This(These) %d Tag(s) In Your Repository!\n", i);
+    return;
+}
+
+void tag_show(int argc, char* argv[], char* rootpath){
+    char alaki[1000];
+    strcpy(alaki, rootpath);
+    strcat(alaki, "\\.samav\\tags\\");
+    strcat(alaki, argv[3]);
+    strcat(alaki, ".txt");
+    FILE* file = fopen(alaki, "r");
+    char line[1000];
+    fprintf(stdout, "SAMAV : Here Is A Tag With The Following Specifications:\n");
+    fprintf(stdout ,"Tag_Name: %s\n", argv[3]);
+    while(fgets(line, 1000, file)){
+        fprintf(stdout, line);
+    }
+    return;
+}
+// Tag Functions: /////
+
+
+
 int main(int argc, char* argv[]){
     // Less Than 2 Inputs:
     if (argc < 2){
@@ -2122,6 +2266,7 @@ int main(int argc, char* argv[]){
                     mkdir("adds");
                     mkdir("commits");
                     mkdir("files");
+                    mkdir("tags");
                     mkdir("branches");
                     chdir("branches");
                     mkdir("master");
@@ -2155,6 +2300,7 @@ int main(int argc, char* argv[]){
                 mkdir("commits");
                 mkdir("adds");
                 mkdir("files");
+                mkdir("tags");
                 mkdir("branches");
                 chdir("branches");
                 mkdir("master");
@@ -2243,7 +2389,6 @@ int main(int argc, char* argv[]){
             // Alias:
             if(strncmp(argv[3], "alias.", 6) == 0){
                 // LATER//
-                // Be Compleete Later!   
                 return 0;
             }
         
@@ -2523,5 +2668,47 @@ int main(int argc, char* argv[]){
         }
     }
     
+    // All The samav tag:
+    else if(strcmp(argv[1], "tag") == 0){
+        if(argc == 2){
+            tag_name(argc, argv, Samav_Root);
+            return 0;
+        }
+        if(strcmp(argv[2], "show") == 0){
+            if(argc != 4){fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!"); return 1;}
+            tag_show(argc, argv, Samav_Root);
+            return 0;
+        } 
+        if(argc >= 4){
+            int state = 0; // -f
+            char** tag = config_tag_read(Samav_Root);
+            char mess[100] = "No Message!";
+            for(int i = 4; i < argc; i++){
+                if(strcmp(argv[i], "-m") == 0){
+                    if(i == argc - 1){fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!"); return 1;}
+                    strcpy(mess, argv[i + 1]);
+                }
+                else if(strcmp(argv[i], "-c") == 0){
+                    if(i == argc - 1){fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!"); return 1;}
+                    strcpy(*(tag + 2), argv[i + 1]);
+                }
+                else if(strcmp(argv[i], "-f") == 0){
+                    state = 1;
+                }
+            }
+            tag_maker(argc, argv, state, tag, mess, Samav_Root);
+            return 0;
+        }
+        fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!");
+        return 1;
+    }
+
+    // All The samav diff:
+    else if(strcmp(argv[1], "tag") == 0){
+        
+    }
+
+
+
     return 0;
 }
