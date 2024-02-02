@@ -2202,6 +2202,235 @@ void tag_show(int argc, char* argv[], char* rootpath){
 // Tag Functions: /////
 
 
+// DIFF Functions: /////
+int which_line(char* path, char* line){
+    FILE* file = fopen(path, "r");
+    char li[1000];
+    int k = 0;
+    while(fgets(li, 1000, file)){
+        k++;
+        li[strlen(li) - 1] = '\0';
+        if(strcmp(li, line) == 0){
+            return k;
+        }
+    }
+    return -1;
+}
+
+void diff_files(char* path1, char* path2, int bg1, int en1, int bg2, int en2){
+    FILE* file1 = fopen(path1, "r");
+    FILE* file2 = fopen(path2, "r");
+    char* f1 = (char*) malloc(sizeof(char) * 30000);
+    char* f2 = (char*) malloc(sizeof(char) * 30000);
+    char line[1000];
+    for(int i = 1; i < bg1; i++){
+        fgets(line, 1000, file1);
+    }
+    fgets(line, 1000, file1);
+    strcpy(f1, line);
+    for(int i = 1; i < bg2; i++){
+        fgets(line, 1000, file2);
+    }
+    fgets(line, 1000, file2);
+    strcpy(f2, line);
+    for(int i = bg1; i < en1; i++){
+        if(fgets(line, 1000, file1)){
+            strcat(f1, line);
+        }
+    }
+    for(int i = bg2; i < en2; i++){
+        if(fgets(line, 1000, file2)){
+            strcat(f2, line);
+        }
+    }
+    fclose(file1);
+    fclose(file2);
+
+
+    char f1n[20][1000];
+    char f2n[20][1000];
+    int index11 = 0;
+    int index21 = 0;
+    for(int i = 0; i < strlen(f1); i++){
+        if(*(f1 + i) == '\n'){
+            f1n[index11][index21] = '\0';
+            index21 = 0;
+            index11++;
+            while(*(f1 + i) == '\n' || *(f1 + i) == ' ' || *(f1 + i) == '\t'){
+                i++;
+            }
+        }
+        f1n[index11][index21] = *(f1 + i);
+        index21++;
+    }
+    f1n[index11][index21 + 1] = '\0';
+
+    int index12 = 0;
+    int index22 = 0;
+    for(int i = 0; i < strlen(f2); i++){
+        if(*(f2 + i) == '\n'){
+            f2n[index12][index22] = '\0';
+            index22 = 0;
+            index12++;
+            while(*(f2 + i) == '\n' || *(f2 + i) == ' ' || *(f2 + i) == '\t'){
+                i++;
+            }
+        }
+        f2n[index12][index22] = *(f2 + i);
+        index22++;
+    }
+    f2n[index12][index22 + 1] = '\0';
+    // f2n , f2n Saved correctly
+
+    int k = 0;
+    if(index11 > index12){
+        for(int i = 0; i < index11; i++){
+            if(strcmp(f1n[i], f2n[i]) != 0){
+                k = 1;
+                fprintf(stdout, "<<<<<<<<\n");
+                fprintf(stdout, "<%s>-<%d>\n", path1, which_line(path1, f1n[i]));
+                fprintf(stdout, "%s\n", f1n[i]);
+                fprintf(stdout, "<%s>-<%d>\n", path2, which_line(path2, f2n[i]));
+                fprintf(stdout, "%s\n", f2n[i]);
+                fprintf(stdout, ">>>>>>>>\n");
+                fprintf(stdout ,"____________________________________________________________\n");
+            }
+        }
+    }
+    else{
+        for(int i = 0; i < index12; i++){
+            if(strcmp(f1n[i], f2n[i]) != 0){
+                k = 1;
+                fprintf(stdout, "<<<<<<<<\n");
+                fprintf(stdout, "<%s>-<%d>\n", path1, which_line(path1, f1n[i]));
+                fprintf(stdout, "%s\n", f1n[i]);
+                fprintf(stdout, "<%s>-<%d>\n", path2 ,which_line(path2, f2n[i]));
+                fprintf(stdout, "%s\n", f2n[i]);
+                fprintf(stdout, ">>>>>>>>\n");
+                fprintf(stdout ,"____________________________________________________________\n");
+            }
+        }
+    }
+    if(!k){
+        fprintf(stdout, "SAMAV : File: \'%s\'And\nFile: \'%s\' Are Similar!\n", path1, path2);
+        fprintf(stdout ,"____________________________________________________________\n");
+
+    }
+    return;
+}
+
+void com_diff(char* com1, char* com2, char* rootpath){
+    char first[1000];
+    strcpy(first, rootpath);
+    strcat(first, "\\.samav\\commits\\");
+    strcat(first, com1);
+    strcat(first, ".txt");
+    char second[1000];
+    strcpy(second, rootpath);
+    strcat(second, "\\.samav\\commits\\");
+    strcat(second, com2);
+    strcat(second, ".txt");
+    FILE* file1 = fopen(first, "r");
+    FILE* file2 = fopen(second, "r");
+    char lin1[1000];
+    char lin2[1000];
+    for(int i = 0; i < 8; i++){
+        fgets(lin1, 1000, file1);
+        fgets(lin2, 1000, file2);
+    }
+    // NOw OK!
+    int is = 0;
+    while(fgets(lin1, 1000, file1)){
+        is = 0;
+        lin1[strlen(lin1) - 1] = '\0';
+        char name1[100];
+        char commit1[100];
+        sscanf(lin1, "%s %s", &name1, &commit1);
+        name1[strlen(name1) - 1] = '\0';
+        while(fgets(lin2, 1000, file2)){
+            lin2[strlen(lin2) - 1] = '\0';
+            char name2[100];
+            char commit2[100];
+            sscanf(lin2, "%s %s", &name2, &commit2);
+            name2[strlen(name2) - 1] = '\0';
+            if(strcmp(name1, name2) == 0){
+                char awal[1000];
+                strcpy(awal, rootpath);
+                strcat(awal, "\\.samav\\files\\");
+                strcat(awal, name1);
+                strcat(awal, ".txt\\");
+                strcat(awal, commit1);
+                strcat(awal, ".txt");
+                char dowom[1000];
+                strcpy(dowom, rootpath);
+                strcat(dowom, "\\.samav\\files\\");
+                strcat(dowom, name2);
+                strcat(dowom, ".txt\\");
+                strcat(dowom, commit2);
+                strcat(dowom, ".txt");
+                diff_files(awal, dowom, 1, line_counter(awal), 2, line_counter(dowom));
+                rewind(file2);
+                for(int i = 0; i < 8; i++){
+                    fgets(lin2, 1000, file2);
+                }
+                is = 1;
+                break;
+            }
+        }
+        if(!is){
+            fprintf(stdout, "SAMAV : File With Name: \'%s\' Is In Commit: \'%s\' But It's Not In Commit: \'%s\' !\n",name1, com1, com2);
+            fprintf(stdout ,"____________________________________________________________\n");
+        }
+        rewind(file2);
+        for(int i = 0; i < 8; i++){
+            fgets(lin2, 1000, file2);
+        }
+    }
+    rewind(file1);
+    for(int i = 0; i < 8; i++){
+        fgets(lin1, 1000, file1);
+    }
+    
+    while(fgets(lin2, 1000, file2)){
+        is = 0;
+        lin2[strlen(lin2) - 1] = '\0';
+        char name1[100];
+        char commit1[100];
+        sscanf(lin2, "%s %s", &name1, &commit1);
+        name1[strlen(name1) - 1] = '\0';
+        while(fgets(lin1, 1000, file1)){
+            lin1[strlen(lin1) - 1] = '\0';
+            char name2[100];
+            char commit2[100];
+            sscanf(lin1, "%s %s", &name2, &commit2);
+            name2[strlen(name2) - 1] = '\0';
+            if(strcmp(name1, name2) == 0){
+                rewind(file1);
+                for(int i = 0; i < 8; i++){
+                    fgets(lin1, 1000, file1);
+                }
+                is = 1;
+                break;
+            }
+        }
+        if(!is){
+            fprintf(stdout, "SAMAV : File With Name: \'%s\' Is In Commit: \'%s\' But It's Not In Commit: \'%s\' !\n",name1, com2, com1);
+            fprintf(stdout ,"____________________________________________________________\n");
+        }
+        rewind(file1);
+        for(int i = 0; i < 8; i++){
+            fgets(lin1, 1000, file1);
+        }
+    }
+    return;
+}
+// Diff Functions! /////
+
+
+
+
+
+
 
 int main(int argc, char* argv[]){
     // Less Than 2 Inputs:
@@ -2704,8 +2933,26 @@ int main(int argc, char* argv[]){
     }
 
     // All The samav diff:
-    else if(strcmp(argv[1], "tag") == 0){
-        
+    else if(strcmp(argv[1], "diff") == 0){
+        if(strcmp(argv[2], "-f") == 0){
+            if(argc < 5){fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!"); return 1;}
+            if(argc == 5){
+                strcat(Samav_Root, "\\.samav");
+                chdir(Samav_Root);
+                diff_files(argv[3], argv[4], 1, line_counter(argv[3]) , 1, line_counter(argv[4]));
+                return 0;
+            }
+            int bg1, en1, bg2, en2;
+            sscanf(argv[6], "%d-%d", &bg1, &en1);
+            sscanf(argv[8], "%d-%d", &bg2, &en2);
+            diff_files(argv[3], argv[4], bg1, en1 , bg2, en2);
+            return 0;
+        }
+        if(strcmp(argv[2], "-c") == 0){
+            if(argc != 5){fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!"); return 1;}
+            com_diff(argv[3], argv[4], Samav_Root);
+            return 0;
+        }
     }
 
 
