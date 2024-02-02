@@ -921,7 +921,7 @@ int reset_folder_mod_simple(int argc, char* argv[], char* pathfile, char* rootpa
 }
 ///// RESET functions DONE! ////////
 
-// Status:
+//// Status Functions: ///////
 void status_file(int argc, char* argv[], char* path, char* rootpath){
     char* alaki = end(argc, argv, path);
     int state = is_staged(alaki, rootpath);
@@ -1085,7 +1085,7 @@ void Delete_commit(int argc, char* argv[], int num, char* rootpath, char* commit
     }
     return;
 }
-// Status:
+////// Status functions DONE! ////////
 
 
 // MAKE BRANCH:
@@ -1161,9 +1161,34 @@ int branch_maker(int argc, char* argv[], char* root_path){
     strcat(operation, "\"");
     strcat(operation, where);
     strcat(operation, " > NUL");
-    printf("%s\n", operation);
     system(operation);
+    char but[1000];
+    strcpy(but, root_path);
+    strcat(but, "\\.samav\\config.txt");
+    FILE* opn = fopen(but, "r");
+    FILE* good = fopen("alaki.txt", "w");
+    char fread[1000];
+    while(fgets(fread, 1000, opn)){
+        if(strncmp(fread, "branch =", 8) == 0){
+            fprintf(good, "branch = %s\n", argv[2]);
+        }
+        else{
+            fprintf(good, fread);
+        }
+    }
+    fclose(opn);
+    fclose(good);
+    char sd[1000] = "del \"";
+    strcat(sd, but);
+    strcat(sd, "\"");
+    system(sd);
 
+    char alaki[1000] = "move /Y \"alaki.txt\" \"";
+    strcat(alaki, but);
+    strcat(alaki, "\" > NUL");
+    system(alaki);
+
+    fprintf(stdout, "SAMAV : A Branch With Name: \'%s\' Is Now In Your Repository!\nYour Now In Branch: \'%s\'.    (%s->%s)\n", argv[2], argv[2], which_branch[2], argv[2]);
     return 0;
 }
 
@@ -1315,6 +1340,63 @@ int read_time(char* rootpath, int name){
 }
 
 ////////////////////// ALL THE WORK WE SHOULD DO IN COMMIT : ///////////////////
+int max_in_commit(char* rootpath, char* name){
+    char path[1000];
+    strcpy(path, rootpath);
+    strcat(path, "\\.samav\\branches\\");
+    strcat(path, name);
+    struct dirent *de;
+    DIR *dr = opendir(path);
+    if (dr == NULL)  // opendir returns NULL if couldn't open directory
+    {
+        printf("nista!\n");
+        return -2;
+    }
+
+    // for readdir()
+    int tmp; 
+    int max = -1;
+    while ((de = readdir(dr)) != NULL){
+        if(strcmp(de->d_name, "..") != 0 && strcmp(de->d_name, ".") != 0){
+            char alak[1000];
+            strcpy(alak, de->d_name);
+            sscanf(alak, "%d.txt", &tmp);
+            if(tmp > max){
+                max = tmp;
+            }
+        }
+    }
+    closedir(dr);     // close directory
+
+    return max;
+}
+
+int is_head(char* rootpath, int where){
+    char path[1000];
+    strcpy(path, rootpath);
+    strcat(path, "\\.samav\\branches");
+    struct dirent *de;
+    DIR *dr = opendir(path);
+    if (dr == NULL)  // opendir returns NULL if couldn't open directory
+    {
+        printf("nista!\n");
+        return -2;
+    }
+
+    // for readdir()
+    int tmp; 
+    int max = -1;
+    while ((de = readdir(dr)) != NULL){
+        if(strcmp(de->d_name, "..") != 0 && strcmp(de->d_name, ".") != 0){
+            if(where == max_in_commit(rootpath, de->d_name)){
+                closedir(dr);
+                return 1;
+            }
+        }
+    }
+    closedir(dr); 
+    return 0;
+}
 
 int run_commit(int argc, char* argv[], char* root_path) {
 
@@ -1334,6 +1416,10 @@ int run_commit(int argc, char* argv[], char* root_path) {
 
     int commit_ID = inc_last_commit_ID(root_path);
     if (commit_ID == -1) return 1;
+    if (commit_ID == -2){
+        fprintf(stdout, "SAMAV : You Are Not In HEAD! And Because Of This You Can't Use Commit Operation Here!\n");
+        return 1;
+    }
     FILE *file = fopen(path, "r");
     FILE * file_copy = fopen(path2, "r");
     if (file == NULL) return 1;
@@ -1394,14 +1480,29 @@ int inc_last_commit_ID(char* root_path) {
     if (tmp_file == NULL) return -1;
 
     int last_commit_ID;
+    int current_commit_id;
     char line[1000];
     while (fgets(line, sizeof(line), file) != NULL) {
         if (strncmp(line, "last_commit_id:", 15) == 0) {
             sscanf(line, "last_commit_id: %d\n", &last_commit_ID);
             last_commit_ID++;
             fprintf(tmp_file, "last_commit_id: %d\n", last_commit_ID);
-
-        } else fprintf(tmp_file, "%s", line);
+        }
+        else if(strncmp(line, "current_commit_id:", 18) == 0){
+            sscanf(line, "current_commit_id: %d\n", &current_commit_id);
+            current_commit_id++;
+            fprintf(tmp_file, "current_commit_id: %d\n", last_commit_ID);
+            if(!is_head(root_path, current_commit_id - 1)){
+                fclose(file);
+                fclose(tmp_file);
+                char sd[1000] = "del \"";
+                strcat(sd, copy);
+                strcat(sd, "\"");
+                system(sd);
+                return -2;
+            }
+        }
+        else fprintf(tmp_file, "%s", line);
     }
     fclose(file);
     fclose(tmp_file);
@@ -1850,7 +1951,113 @@ void search_message(int argc, char* argv[], int current, char* root_path){
 // Log Functions:
 
 
+// Checkout Functions: ////
+void cop_check(int which, char* what, char* rootpath){
+    char first[1000];
+    strcpy(first, rootpath);
+    strcat(first, "\\.samav\\files\\");
+    strcat(first, what);
+    strcat(first, "\\");
+    char tmp[100];
+    sprintf(tmp, "%d.txt", which);
+    strcat(first, tmp);
+    FILE* awal = fopen(first, "r");
+    // Done!
+    char oper[1000] = "dir /s /a:-d /b ";
+    strcat(oper, what);
+    strcat(oper, " >> alaki.txt");
+    system(oper);
+    FILE* f = fopen("alaki.txt", "r");
+    char second[1000];
+    fgets(second, 1000, f);
+    second[strlen(second) - 1] = '\0';
+    fclose(f);
+    system("del alaki.txt");
+    FILE* dowom = fopen(second, "w");
+    // Done!
+    char buffer;
+    buffer = fgetc(awal);
+    while(buffer != EOF) {
+        fputc(buffer, dowom);
+        buffer = fgetc(awal);
+    }
+    fclose(awal);
+    fclose(dowom);
+    fprintf(stdout, "SAMAV : File With Address: \'%s\' Has Been Updated! With Commit: \'%d\'\n", second, which);
+    return;
+}
 
+
+void run_check(int argc, char* argv[], char* rootpath, int che){
+    char alaki[1000];
+    strcpy(alaki, rootpath);
+    strcat(alaki, "\\.samav\\commits\\");
+    char tmp[100];
+    sprintf(tmp, "%d.txt", che);
+    strcat(alaki, tmp);
+    FILE* file = fopen(alaki, "r");
+    char red[1000];
+    for(int i = 0; i < 5; i++){
+        fgets(red, 1000, file);
+    }
+    char where[100]; // branch
+    strcpy(where, red);
+    where[strlen(where) - 1] = '\0';
+
+
+    // Making Config Ok!:
+    char br[1000];
+    strcpy(br, rootpath);
+    strcat(br, "\\.samav\\config.txt");
+    FILE* bran = fopen(br, "r");
+    char k[1000];
+    strcpy(k, rootpath);
+    strcat(k, "\\.samav\\1.txt");
+    FILE* bran_cop = fopen(k, "w");
+    char line[1000];
+    while(fgets(line, 1000, bran)){
+        if(strncmp(line, "branch =", 8) == 0){
+            fprintf(bran_cop, "branch = %s", red);
+        }
+        else if(strncmp(line, "current_commit_id:", 18) == 0){
+            fprintf(bran_cop, "current_commit_id: %d\n", che);
+        }
+        else{
+            fprintf(bran_cop, line); 
+        }
+    }
+    fclose(bran);
+    fclose(bran_cop);
+    char sd[1000] = "del \"";
+    strcat(sd, br);
+    strcat(sd, "\"");
+    system(sd);
+    char al[1000] = "move /Y \"";
+    strcat(al, k);
+    strcat(al, "\" \"");
+    strcat(al, br);
+    strcat(al, "\" > NUL");
+    system(al);
+    // OK!////
+    for(int i = 0; i < 3; i++){
+        fgets(red, 1000, file);
+    }
+
+    // READING THE FILES:
+    while(fgets(red, 1000, file)){
+        red[strlen(red) - 1] = '\0';
+        char what[100];
+        int which;
+        sscanf(red, "%s %d", &what, &which);
+        what[strlen(what) - 1] = '\0';
+        cop_check(which, what, rootpath);
+    }
+    fclose(file);
+    fprintf(stdout ,"____________________________________________________________\n");
+    fprintf(stdout, "SAMAV : Checkout Was Succesful! Now You Are In Commit:\'%d\', Branch:\'%s\'\n", che, where);
+    return;
+}
+// CHECKout Functions! /////////
 
 int main(int argc, char* argv[]){
     // Less Than 2 Inputs:
@@ -2276,6 +2483,44 @@ int main(int argc, char* argv[]){
         else{fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!"); return 1;}
     }
 
+    // All The samav checkout:
+    else if(strcmp(argv[1], "checkout") == 0){
+        if(Samav_Root == NULL){fprintf(stdout ,"SAMAV : You Don't Have Any Initilized Repository. Please Use This Operation First:\nsamav init\nThen Try Again Later!"); return 1;}
+        if(argc < 3){fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!"); return 1;}
+        char where[1000];
+        strcpy(where, Samav_Root);
+        strcat(where, "\\.samav\\stage.txt");
+        if(line_counter(where) != 0 && line_counter(where) != 1){
+            fprintf(stdout, "SAMAV : You Can't Checkout to \'%s\' ! Because You Have File(s) That Are Not Committed Yet!\nPlease Use Commit Operation First!\n", argv[2]);
+            return 1;
+        }
+        if(strcmp(argv[2], "HEAD") == 0){
+            if(argc > 3){
+                if(strcmp(argv[3], "-n") == 0){
+                    int a = str_num(argv[4]);
+                    if(a > last_commit - 1000000){
+                        fprintf(stdout, "SAMAV : You Can't Checkout To Commit Id: %d ! This Id Doesn't Exist!\n", last_commit - a);
+                        return 1;
+                    }
+                    run_check(argc, argv, Samav_Root, last_commit - a);
+                    return 0;
+                }
+            }
+            int che = last_commit;
+            run_check(argc, argv, Samav_Root, che);
+            return 0;
+        }
+        if(argv[2][0] == '1'){
+            int che = str_num(argv[2]);
+            run_check(argc, argv, Samav_Root, che);
+            return 0;
+        }
+        else{
+            int che = max_in_commit(Samav_Root, argv[2]);
+            run_check(argc, argv, Samav_Root, che);
+            return 0;
+        }
+    }
     
     return 0;
 }
