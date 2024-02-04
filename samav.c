@@ -2319,7 +2319,6 @@ void diff_files(char* path1, char* path2, int bg1, int en1, int bg2, int en2, ch
         fclose(f);
         system("del alaki.txt");
     }
-    printf("%s4\n", f2n[4]);
 
 
     int k = 0;
@@ -2380,14 +2379,14 @@ void diff_files(char* path1, char* path2, int bg1, int en1, int bg2, int en2, ch
                     // ok!
 
                     SetColor(6, 0);
-                    printf("SAMAV : ");
+                    printf("\nSAMAV : ");
                     SetColor(4, 0);
                     printf("CONFLICT ERROR!\nHow Do You Want To Fix This Problem? Please Choose One Of This Operations:\n");
                     SetColor(8, 0);
                     printf("1) You Want To Replace The First One.\n2) You Want To Replace The Second One.\nedit) You Want To Enter Your Own Line.\nquit) You Want To Cansel This Merge! And Quit.\n");
                     SetColor(7, 0);
                     printf("Your Choose: ");
-                    char boro[100];
+                    char boro[1000];
                     fgets(boro, 1000, stdin);
                     if(strcmp(boro, "1\n") == 0){
                         if(!but){
@@ -2398,7 +2397,7 @@ void diff_files(char* path1, char* path2, int bg1, int en1, int bg2, int en2, ch
                             File_write_merge_2(second1, f1n[i], which_line(path1, f1n[i]));
                         }
                         SetColor(6, 0);
-                        printf("SAMAV : ");
+                        printf("\nSAMAV : ");
                         SetColor(10, 0);
                         printf("By Your Choose, First line Replaced!\n");
                         SetColor(15, 0);
@@ -2414,7 +2413,7 @@ void diff_files(char* path1, char* path2, int bg1, int en1, int bg2, int en2, ch
                             File_write_merge_2(second2, f2n[i], which_line(path2, f2n[i]));
                         }
                         SetColor(6, 0);
-                        printf("SAMAV : ");
+                        printf("\nSAMAV : ");
                         SetColor(10, 0);
                         printf("By Your Choose, Second line Replaced!\n");
                         SetColor(15, 0);
@@ -2433,7 +2432,7 @@ void diff_files(char* path1, char* path2, int bg1, int en1, int bg2, int en2, ch
                             File_write_merge_2(second1, boro, which_line(path1, f1n[i]));
                         }
                         SetColor(6, 0);
-                        printf("SAMAV : ");
+                        printf("\nSAMAV : ");
                         SetColor(10, 0);
                         printf("By Your Choose, line: \'%s\' Replaced!\n", boro);
                         SetColor(15, 0);
@@ -2442,7 +2441,7 @@ void diff_files(char* path1, char* path2, int bg1, int en1, int bg2, int en2, ch
                     }
                     if(strcmp(boro, "quit\n") == 0){
                         SetColor(6, 0);
-                        printf("SAMAV : ");
+                        printf("\nSAMAV : ");
                         SetColor(10, 0);
                         printf("By Your Choose, Merge Canceled!\n");
                         SetColor(15, 0);
@@ -2738,6 +2737,7 @@ void File_write_merge_2(char* path_read, char* line, int what){
         }
     }
     fclose(file_w);
+    fclose(file_r);
     file_r = fopen("alaki.txt", "r");
     file_w = fopen(path_read, "w");
     char buffer;
@@ -2763,12 +2763,13 @@ void File_write_merge_no(char* path_read, char* name){
     fgets(second, 1000, f);
     second[strlen(second) - 1] = '\0';
     fclose(f);
-    f = fopen("alaki.txt", "w");
-    fclose(f);
     system("del alaki.txt");
     FILE* file_2 = fopen(second, "w");
-    while(fgets(oper, 1000, file)){
-        fprintf(file_2, oper);
+    char buffer;
+    buffer = fgetc(file);
+    while(buffer != EOF) {
+        fputc(buffer, file_2);
+        buffer = fgetc(file);
     }
     fclose(file);
     fclose(file_2);
@@ -2848,7 +2849,14 @@ int merge_run(int argc, char* argv[], int commit1, int commit2, char* rootpath){
         }
     }
     // THERE IS NO CONFLICT !!!
-
+    rewind(file1);
+    for(int i = 0; i < 8; i++){
+        fgets(line, 1000, file1);
+    }
+    rewind(file2);
+    for(int i = 0; i < 8; i++){
+        fgets(line2, 1000, file2);
+    }
     // In 2 not 1:
     int is;
     while(fgets(line2, 1000, file2)){
@@ -2874,12 +2882,28 @@ int merge_run(int argc, char* argv[], int commit1, int commit2, char* rootpath){
             }
         }
         if(!is){
-            // func
+            char awal[1000];
+            strcpy(awal, rootpath);
+            strcat(awal, "\\.samav\\files\\");
+            strcat(awal, nam1);
+            strcat(awal, "\\");
+            strcat(awal, com1);
+            strcat(awal, ".txt");
+            File_write_merge_no(awal ,nam1);
+            printf("salam\n");
         }
         rewind(file1);
         for(int i = 0; i < 8; i++){
             fgets(line, 1000, file1);
         }
+    }
+    rewind(file1);
+    for(int i = 0; i < 8; i++){
+        fgets(line, 1000, file1);
+    }
+        rewind(file2);
+    for(int i = 0; i < 8; i++){
+        fgets(line2, 1000, file2);
     }
     // In 1 not 2:
     while(fgets(line, 1000, file1)){
@@ -2905,13 +2929,23 @@ int merge_run(int argc, char* argv[], int commit1, int commit2, char* rootpath){
             }
         }
         if(!is){
-            // func
+            char awal[1000];
+            strcpy(awal, rootpath);
+            strcat(awal, "\\.samav\\files\\");
+            strcat(awal, nam1);
+            strcat(awal, "\\");
+            strcat(awal, com1);
+            strcat(awal, ".txt");
+            File_write_merge_no(awal ,nam1);
+            printf("SALAM\n");
         }
         rewind(file2);
         for(int i = 0; i < 8; i++){
             fgets(line2, 1000, file2);
         }
     }
+    fclose(file1);
+    fclose(file2);
     return 0;
 }
 
