@@ -2509,7 +2509,7 @@ void diff_files(char* path1, char* path2, int bg1, int en1, int bg2, int en2, ch
                     // ok!
 
                     SetColor(6, 0);
-                    printf("SAMAV : ");
+                    printf("\nSAMAV : ");
                     SetColor(4, 0);
                     printf("CONFLICT ERROR!\nHow Do You Want To Fix This Problem? Please Choose One Of This Operations:\n");
                     SetColor(8, 0);
@@ -2889,7 +2889,11 @@ int merge_run(int argc, char* argv[], int commit1, int commit2, char* rootpath){
             strcat(awal, com1);
             strcat(awal, ".txt");
             File_write_merge_no(awal ,nam1);
-            printf("salam\n");
+            SetColor(6, 0);
+            printf("SAMAV : ");
+            SetColor(9, 0);
+            printf("File With Name: \'%s\' has Been Added!\n", nam1);
+            SetColor(15, 0);
         }
         rewind(file1);
         for(int i = 0; i < 8; i++){
@@ -2936,7 +2940,11 @@ int merge_run(int argc, char* argv[], int commit1, int commit2, char* rootpath){
             strcat(awal, com1);
             strcat(awal, ".txt");
             File_write_merge_no(awal ,nam1);
-            printf("SALAM\n");
+            SetColor(6, 0);
+            printf("SAMAV : ");
+            SetColor(9, 0);
+            printf("File With Name: \'%s\' has Been Added!\n", nam1);
+            SetColor(15, 0);
         }
         rewind(file2);
         for(int i = 0; i < 8; i++){
@@ -3651,8 +3659,21 @@ int main(int argc, char* argv[]){
         strcat(line, "\" > NUL");
         system(line);
         chdir(".samav");
-        // func:
-        merge_run(argc, argv, commit1, commit2, Samav_Root);
+        if( merge_run(argc, argv, commit1, commit2, Samav_Root) == 1){
+            SetColor(6, 0);
+            printf("\nSAMAV : ");
+            SetColor(9, 0);
+            printf("Please Try Again!\n");
+            SetColor(15, 0);
+            return 0;
+        }
+        SetColor(6, 0);
+        printf("\nSAMAV : ");
+        SetColor(9, 0);
+        printf("Merge Was Successful !\n");
+        SetColor(10, 0);
+        printf("You Are Now On Branch: \'%s\'\n", argv[3]);
+        SetColor(15, 0);
         return 0;
     }  
 
