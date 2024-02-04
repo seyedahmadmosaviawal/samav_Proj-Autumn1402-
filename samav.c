@@ -2776,7 +2776,6 @@ void File_write_merge_no(char* path_read, char* name){
     return;
 }
 
-
 int merge_run(int argc, char* argv[], int commit1, int commit2, char* rootpath){
     char com1[1000];
     strcpy(com1, rootpath);
@@ -2948,8 +2947,137 @@ int merge_run(int argc, char* argv[], int commit1, int commit2, char* rootpath){
     fclose(file2);
     return 0;
 }
+// Merge Functions!!! /////
 
 
+// Grep Functions:
+int grep_search(char* line, char* name, int l, int where){
+    char wq[40][100];
+    int index1 = 0;
+    int index2 = 0;
+    int is = 1;
+    int xz = 0;
+    for(int i = 0; i < strlen(line); i++){
+        while(line[i] == ' '){
+            if(is){
+                wq[index1][index2] = '\0';
+                index1++;
+                index2 = 0;
+                is = 0;
+            }
+            i++;
+        }
+        is = 1;
+        wq[index1][index2] = line[i];
+        index2++;
+    }
+    wq[index1][index2] = '\0';
+    if(l){
+        printf("In Line: ");
+        SetColor(9, 0);
+        printf("\'%2d\' ", where);
+        SetColor(15, 0);
+        printf(": ");
+    }
+    for(int i = 0; i < index1; i++){
+        if(strcmp(wq[i], name) == 0){
+            xz = 1;
+            SetColor(4, 0);
+            printf("%s ", name);
+            SetColor(15, 0);
+        }
+        else{
+            SetColor(10, 0);
+            printf("%s ", wq[i]);
+        }
+    }
+    if(strcmp(wq[index1], name) == 0){
+        xz = 1;
+        SetColor(4, 0);
+        printf("%s\n", name);
+        SetColor(15, 0);
+    }
+    else{
+        SetColor(10, 0);
+        printf("%s\n", wq[index1]);
+        SetColor(15, 0);
+    }
+    return xz;
+}
+
+
+void grep_run(int argc, char* argv[], char* rootpath, int is, char* com, int line){
+    char boro[1000];
+    char op[1000];
+    char nam[100];
+    char whe[100];
+    char second[1000];
+    FILE* file;
+    FILE* file2;
+    // Opening THe file:
+    if(is){
+        strcpy(boro, rootpath);
+        strcat(boro, "\\.samav\\commits\\");
+        strcat(boro, com);
+        strcat(boro, ".txt");
+        file2 = fopen(boro, "r");
+        while(fgets(op, 1000, file2)){
+            if(strstr(op, argv[3]) != NULL){
+                op[strlen(op) - 1] = '\0';
+                sscanf(op, "%s %s", &nam, &whe);
+                fclose(file2);
+                strcpy(boro, rootpath);
+                strcat(boro, "\\.samav\\files\\");
+                strcat(boro, argv[3]);
+                strcat(boro, "\\");
+                strcat(boro, whe);
+                strcat(boro, ".txt");
+                file = fopen(boro, "r");
+                break;
+            }
+        }
+    }
+    else{
+        char oper[1000] = "dir /s /a:-d /b ";
+        strcat(oper, argv[3]);
+        strcat(oper, " >> alaki.txt");
+        system(oper);
+        FILE* f = fopen("alaki.txt", "r");
+        fgets(second, 1000, f);
+        second[strlen(second) - 1] = '\0';
+        fclose(f);
+        system("del alaki.txt");
+        file = fopen(second, "r");
+    }
+
+    int vc = 0;
+    int count = 1;
+    while(fgets(second, 1000, file)){
+        second[strlen(second) - 1] = '\0';
+        if(strstr(second, argv[5]) != NULL){
+            if(grep_search(second, argv[5], line, count) == 1){
+                vc = 1;
+            }
+        }
+        count++;
+    }
+    if(!vc){
+        SetColor(6, 0);
+        printf("SAMAV : ");
+        SetColor(9, 0);
+        printf("There Is No Matching Word In File: ");
+        SetColor(10, 0);
+        printf("\'%s\' ", argv[3]);
+        SetColor(9, 0);
+        printf("With Word: ");
+        SetColor(10, 0);
+        printf("\'%s\'\n", argv[5]);
+        SetColor(15, 0);
+    }
+
+    return;
+}
+// Grep Functions! ///////
 
 
 
@@ -3528,6 +3656,30 @@ int main(int argc, char* argv[]){
         return 0;
     }  
 
+    // All The samav grep:
+    else if(strcmp(argv[1], "grep") == 0){
+        if(argc < 6){fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!"); return 1;}
+        int line = 0;
+        int is = 0;
+        char com[1000];
+        for(int i = 6; i < argc; i++){
+            if(strcmp(argv[i], "-c") == 0){
+                is = 1;
+                strcpy(com, argv[i + 1]);
+                strcat(com, "\0");
+            }
+            if(strcmp(argv[i], "-n") == 0){
+                line = 1;
+            }
+        }
+        grep_run(argc, argv, Samav_Root, is, com ,line);
+        return 0;
+    }
+
+    // All The samav revert:
+    else if(strcmp(argv[1], "revert") == 0){
+
+    }
 
     return 0;
 }
