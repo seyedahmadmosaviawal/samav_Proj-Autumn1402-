@@ -63,6 +63,62 @@ int folder_reader(int argc, char* argv[], char* pathfile, char* rootpath);
 void status_file(int argc, char* argv[], char* path, char* rootpath);
 void File_write_merge(char* path_read, char* line, int what, char* path_write);
 void File_write_merge_2(char* path_read, char* line, int what);
+void SetColor(int ForgC, int BackC);
+
+
+
+// // help:
+// // void help(){
+//     printf("NOTE : Argumants In [] Are Optional And You Can Choose Argumants In <>\n");
+//     SetColor(15, 0);
+//     printf("______________________________________________________________\n");
+//     SetColor(10, 0);
+//     printf("samav config [-global] user.<name, email> \"Your Input\":\n");
+//     SetColor(4, 0);
+//     printf("Configuration Your Name And Email For Global Or Local Repository!\n");
+//     SetColor(15, 0);
+//     printf("______________________________________________________________\n");
+//     SetColor(10, 0);
+//     printf("samav config [-global] alias.(aliasname) \" a command\":\n");
+//     SetColor(4, 0);
+//     printf("Its For Save An Global Or Local Alias For A Command\n");
+//     SetColor(15, 0);
+//     printf("______________________________________________________________\n");
+//     SetColor(10, 0);
+//     printf("samav init:\n");
+//     SetColor(4, 0);
+//     printf("Its For Initializing A Repository!\n");
+//     SetColor(15, 0);
+//     printf("______________________________________________________________\n");
+//     SetColor(10, 0);
+//     printf("samav add [-f] [-redo] [-n, (depth)] <File_Address, Folder_Address>:\n");
+//     SetColor(4, 0);
+//     printf("Its For Adding A File Or Folder's File(s) In Your Repository!\n");
+//     printf("Option -f Is For Adding Some Files In One Step, -n Is For Showing The Situation of Files In Your Project\nBy Depth You Can Choose How Many Depth Do You Want To See. And -redo Is For Modified Files!\n");
+//     SetColor(15, 0);
+//     printf("______________________________________________________________\n");
+//     SetColor(10, 0);
+//     printf("samav reset [-undo] [File, Folder_Address]:\n");
+//     SetColor(4, 0);
+//     printf("This Operation Is The Opposite Of \'samav add\'!, By -undo Option You Can Just Reset Your Last Added Files\n");
+//     SetColor(15, 0);
+//     printf("______________________________________________________________\n");
+//     SetColor(10, 0);
+//     printf("samav status");
+//     SetColor(4, 0);
+//     printf("This Operation Is For Showing The Situations Of Files In Your Proj! By \'XY\'!\nX Can Be +(In Staging Area) And -(Not In Staging Area), Y Can Be A(Added), M(Modified) And D(Deleted Files)\n");
+//     SetColor(15, 0);
+//     printf("______________________________________________________________\n");
+//     SetColor(10, 0);
+//     printf("samav commit -m \" Your Message\":\n");
+//     SetColor(4, 0);
+//     printf("Its For Create A Commit In MeanWhile Situation!\n");
+
+
+
+
+//     return;
+// }
 
 
 
@@ -1405,7 +1461,7 @@ int is_head(char* rootpath, int where){
     return 0;
 }
 
-int run_commit(int argc, char* argv[], char* root_path) {
+int run_commit(int argc, char* argv[], char* root_path){
 
     char message[73];
     strcpy(message, argv[3]);
@@ -1959,6 +2015,13 @@ void search_message(int argc, char* argv[], int current, char* root_path){
 // Log Functions:
 
 
+// commit for merge and revert:
+// int com_revert(int argc, char* argv[], char* rootpath, char* message, char* branch){
+
+// }
+
+
+
 // Checkout Functions: ////
 void cop_check(int which, char* what, char* rootpath){
     char first[1000];
@@ -2061,7 +2124,7 @@ void run_check(int argc, char* argv[], char* rootpath, int che){
     }
     fclose(file);
     fprintf(stdout ,"____________________________________________________________\n");
-    fprintf(stdout, "SAMAV : Checkout Was Succesful! Now You Are In Commit:\'%d\', Branch:\'%s\'\n", che, where);
+    fprintf(stdout, "SAMAV : Now You Are In Commit:\'%d\', Branch:\'%s\'\n", che, where);
     return;
 }
 // CHECKout Functions! /////////
@@ -2117,7 +2180,7 @@ void tag_maker(int argc, char* argv[], int state, char** tag, char* message, cha
         if(strncmp(entry->d_name, argv[3], strlen(argv[3])) == 0){
             if(!state){
                 fprintf(stdout, "SAMAV : A Tag With Name: \'%s\' is Already Exists! Please Choose A Different Name!\n", argv[3]);
-                return 1;
+                return;
             }
             else{
                 is = 1;
@@ -3013,7 +3076,6 @@ int grep_search(char* line, char* name, int l, int where){
     return xz;
 }
 
-
 void grep_run(int argc, char* argv[], char* rootpath, int is, char* com, int line){
     char boro[1000];
     char op[1000];
@@ -3087,6 +3149,147 @@ void grep_run(int argc, char* argv[], char* rootpath, int is, char* com, int lin
 }
 // Grep Functions! ///////
 
+// Revert Functions: ////
+void run_revert(int want, int mes_want, char* message, char* rootpath, int argc, char* argv[], int what_com, char** confi){
+    run_check(argc, argv, rootpath, what_com);
+    char alaki[1000];
+    strcpy(alaki, rootpath);
+    strcat(alaki, "\\.samav\\config.txt");
+    FILE* file = fopen(alaki, "r");
+    char alaki2[1000];
+    strcpy(alaki2, rootpath);
+    strcat(alaki2, "\\.samav\\index.txt");
+    FILE* tmp_file = fopen(alaki2, "w");
+    int last_commit_ID;
+    int current_commit_id;
+    char line[1000];
+    while (fgets(line, sizeof(line), file) != NULL) {
+        if (strncmp(line, "branch =", 8) == 0){
+            fprintf(tmp_file, "branch = %s\n", *(confi + 2));
+        }
+        else if (strncmp(line, "last_commit_id:", 15) == 0) {
+            line[strlen(line) - 1] = '\0';
+            sscanf(line, "last_commit_id: %d", &last_commit_ID);
+            last_commit_ID++;
+            if(want){
+                fprintf(tmp_file, "last_commit_id: %d\n", last_commit_ID);
+            }
+            else{
+                fprintf(tmp_file, "last_commit_id: %d\n", last_commit_ID - 1);
+            }
+        }
+        else if(strncmp(line, "current_commit_id:", 18) == 0){
+            line[strlen(line) - 1] = '\0';
+            sscanf(line, "current_commit_id: %d", &current_commit_id);
+            if(want){
+                fprintf(tmp_file, "current_commit_id: %d\n", last_commit_ID);
+            }
+            else{
+                fprintf(tmp_file, "current_commit_id: %d\n", last_commit_ID - 1);
+            }
+        }
+        else fprintf(tmp_file, "%s", line);
+    }
+    fclose(file);
+    fclose(tmp_file);
+    char sd[1000] = "del \"";
+    strcat(sd, alaki);
+    strcat(sd, "\"");
+    system(sd);
+    char al[1000] = "move /Y \"";
+    strcat(al, alaki2);
+    strcat(al, "\" \"");
+    strcat(al, alaki);
+    strcat(al, "\" > NUL");
+    system(al);
+    if(want == 0){return;}
+
+    char tmp1[100];
+    sprintf(tmp1, "%d.txt", last_commit_ID);
+
+    char vaghan[1000] = "copy \"";
+    strcat(vaghan, rootpath);
+    strcat(vaghan, "\\.samav\\commits\\");
+    char tmp[100];
+    sprintf(tmp, "%d.txt", what_com);
+    strcat(vaghan, tmp);
+    strcat(vaghan, "\" \"");
+    strcat(vaghan, rootpath);
+    strcat(vaghan, "\\.samav\\commits\\");
+    strcat(vaghan, tmp1);
+    strcat(vaghan, "\" > NUL");
+    system(vaghan);
+
+
+
+    char jaj[1000];
+    strcpy(jaj, rootpath);
+    strcat(jaj, "\\.samav\\commits\\");
+    strcat(jaj, tmp1);
+
+    file = fopen(jaj, "r");
+    tmp_file = fopen(".samav\\index.txt", "w");
+    fgets(line, 1000, file);
+    fprintf(tmp_file, line);
+    fgets(line, 1000, file);
+    fprintf(tmp_file, "message: %s\n", message);
+    fgets(line, 1000,file);
+
+    char as[1000];
+    strcpy(as, "time /t >> \"");
+    strcat(as, global_thing);
+    strcat(as, "\\time.txt\"");
+    system(as);
+    char alak[1000] = "echo %date% >> \"";
+    strcat(alak, global_thing);
+    strcat(alak, "\\time.txt\"");
+    system(alak);
+    char op[1000];
+    strcpy(op, global_thing);
+    strcat(op, "\\time.txt");
+    FILE* time = fopen(op, "r");
+    int hour, minute;
+    fscanf(time, "%d:%d", &hour, &minute);
+    rewind(time);
+    char li[1000];
+    fgets(li, 1000, time);
+    fgets(li, 1000, time);
+    fclose(time);
+    time = fopen(op, "w");
+    fclose(time);
+    fprintf(tmp_file, "%d:%d, %d\n", hour , minute, (60 * hour) + minute);
+    fprintf(tmp_file, li);
+    fgets(line, 1000, file);
+    fgets(line, 1000, file);
+    fprintf(tmp_file, "%s\n", *(confi + 2));
+    fgets(line, 1000, file);
+    fprintf(tmp_file, "%s\n" ,*(confi + 0));
+    fprintf(tmp_file, "%s\n" ,*(confi + 1));
+    fgets(line, 1000, file);
+    while(fgets(line, 1000, file)){
+        fprintf(tmp_file, line);
+    }
+    fclose(file);
+    fclose(tmp_file);
+    char sw[1000] = "del \"";
+    strcat(sw, jaj);
+    strcat(sw, "\"");
+    system(sw);
+    char au[1000] = "move /Y \".samav\\index.txt\" ";
+    strcat(au, "\"");
+    strcat(au, jaj);
+    strcat(au, "\" > NUL");
+    system(au);
+    SetColor(6, 0);
+    printf("SAMAV : ");
+    SetColor(9, 0);
+    printf("Commit Was Successful With ID: \'%d\', Message: \'%s\' !\n", last_commit_ID, message);
+    SetColor(15, 0);
+
+    return;
+}
+
+// Revert Functions: //// 
 
 
 int main(int argc, char* argv[]){
@@ -3699,8 +3902,109 @@ int main(int argc, char* argv[]){
 
     // All The samav revert:
     else if(strcmp(argv[1], "revert") == 0){
-
+        if(argc < 3){fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!"); return 1;}
+        char laki[1000];
+        strcpy(laki, Samav_Root);
+        strcat(laki, "\\.samav\\merge.txt");
+        FILE* file = fopen(laki, "r");
+        char li[1000];
+        int max = 0;
+        while(fgets(li, 1000, file)){
+            li[strlen(li) - 1] = '\0';
+            char br1[100];
+            char br2[100];
+            int co1, co2;
+            sscanf(li, "%s %d %s %d", &br1, &co1, &br2 ,&co2);
+            if(co1 >= max){
+                max = co1;
+            }
+            if(co2 >= max){
+                max = co2;
+            }
+        }
+        fclose(file);
+        int want = 1;
+        char message[100];
+        int mes_want = 0;
+        int what_com;
+        if(strcmp(argv[2], "-n") == 0){
+            want = 0;
+            what_com = str_num(argv[3]);
+            if(what_com <= max){
+                SetColor(6, 0);
+                printf("SAMAV : ");
+                SetColor(9, 0);
+                printf("You Have Merge In Commit: \'%d\' So You Can't Revert To Commit: \'%d\'!", max, what_com);
+                SetColor(15, 0);
+                return 1;
+            }
+            run_revert(want, mes_want, message, Samav_Root, argc, argv, what_com, config);
+            return 0;
+        }
+        if(strcmp(argv[2], "-m") == 0){
+            mes_want = 1;
+            strcpy(message, argv[3]);
+            strcat(message, "\0");
+            // Commit:
+            if(argv[4][0] == '1'){
+                what_com = str_num(argv[4]);
+                if(what_com <= max){
+                    SetColor(6, 0);
+                    printf("SAMAV : ");
+                    SetColor(9, 0);
+                    printf("You Have Merge In Commit: \'%d\' So You Can't Revert To Commit: \'%d\'!", max, what_com);
+                    SetColor(15, 0);
+                    return 1;
+                }
+                run_revert(want, mes_want, message, Samav_Root, argc, argv, what_com, config);
+                return 0;
+            }
+            // HEAD:
+            what_com = last_commit - str_num(argv[5]);
+            if(what_com <= max){
+                SetColor(6, 0);
+                printf("SAMAV : ");
+                SetColor(9, 0);
+                printf("You Have Merge In Commit: \'%d\' So You Can't Revert To Commit: \'%d\'!", max, what_com);
+                SetColor(15, 0);
+                return 1;
+            }
+            run_revert(want, mes_want, message, Samav_Root, argc, argv, what_com, config);
+            return 0;
+        }
+        if(argv[2][0] == '1'){
+            what_com = str_num(argv[2]);
+            if(what_com <= max){
+                SetColor(6, 0);
+                printf("SAMAV : ");
+                SetColor(9, 0);
+                printf("You Have Merge In Commit: \'%d\' So You Can't Revert To Commit: \'%d\'!", max, what_com);
+                SetColor(15, 0);
+                return 1;
+            }
+            char** nu = commits_reader(Samav_Root, what_com);
+            strcpy(message, *(nu + 0));
+            strcat(message, "\0");
+            run_revert(want, mes_want, message, Samav_Root, argc, argv, what_com, config);
+            return 0;
+        }
+        what_com = last_commit - str_num(argv[3]);
+            if(what_com <= max){
+                SetColor(6, 0);
+                printf("SAMAV : ");
+                SetColor(9, 0);
+                printf("You Have Merge In Commit: \'%d\' So You Can't Revert To Commit: \'%d\'!", max, what_com);
+                SetColor(15, 0);
+                return 1;
+            }
+        char** nu = commits_reader(Samav_Root, what_com);
+        strcpy(message, *(nu + 0));
+        strcat(message, "\0");
+        run_revert(want, mes_want, message, Samav_Root, argc, argv, what_com, config);
+        return 0;
     }
-
+    
+    
+    
     return 0;
 }
