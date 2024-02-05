@@ -1277,7 +1277,9 @@ int branch_show(int argc, char* argv[], char* root_path){
     while ((entry = readdir(dir)) != NULL) {
         if(strcmp(entry->d_name, "..") != 0 && strcmp(entry->d_name, ".") != 0){
             if(strcmp(entry->d_name, which[2]) == 0){
+                SetColor(10, 0);
                 fprintf(stdout ,"* %s\n", entry->d_name);
+                SetColor(15, 0);
             }
             else{
                 printf("%s\n", entry->d_name);
@@ -1412,7 +1414,6 @@ int max_in_commit(char* rootpath, char* name){
     DIR *dr = opendir(path);
     if (dr == NULL)  // opendir returns NULL if couldn't open directory
     {
-        printf("nista!\n");
         return -2;
     }
 
@@ -3314,6 +3315,165 @@ void err(){
     return;
 }
 
+// Tree:
+int* tree_commit(char* rootpath, char* name){
+    int* res = (int*) malloc(1000 * sizeof(int));
+
+    char path[1000];
+    strcpy(path, rootpath);
+    strcat(path, "\\.samav\\branches\\");
+    strcat(path, name);
+    struct dirent *de;
+    DIR *dr = opendir(path);
+    if (dr == NULL)  // opendir returns NULL if couldn't open directory
+    {
+        return -2;
+    }
+
+    // for readdir()
+    int tmp;
+    int q = 0;
+    while ((de = readdir(dr)) != NULL){
+        if(strcmp(de->d_name, "..") != 0 && strcmp(de->d_name, ".") != 0){
+            char alak[1000];
+            strcpy(alak, de->d_name);
+            sscanf(alak, "%d.txt", &tmp);
+            *(res + q) = tmp % 100;
+            q++;
+        }
+    }
+    *(res + q) = 100;
+    closedir(dr);     // close directory
+    return res;
+}
+
+void run_tree(int argc, char* argv[], char* rootpath){
+    char path[1000];
+    strcpy(path, rootpath);
+    strcat(path, "\\.samav\\branches");
+    DIR *dir;
+    struct dirent *entry;
+
+    // Replace "directory_path" with the actual directory path you want to read
+    dir = opendir(path);
+
+    if (dir == NULL) {
+        perror("SAMAV : Error Opening Directory!");
+        return 1;
+    }
+    char tree[1000];
+
+    while ((entry = readdir(dir)) != NULL) {
+        if(strcmp(entry->d_name, "..") != 0 && strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "master") != 0){
+            strcpy(tree, entry->d_name);
+            strcat(tree, "\0");
+        }
+    }
+    closedir(dir);
+    int* mas = tree_commit(rootpath, "master");
+    int* alk = tree_commit(rootpath, tree);
+    char merge[1000];
+    strcpy(merge, rootpath);
+    strcat(merge, "\\.samav\\merge.txt");
+    FILE* file = fopen(merge, "r");
+    char alki[1000];
+    int mas_index = 0;
+    int alk_index = 0;
+    int com1, com2;
+    char ak[100];
+    char ak2[100];
+    while(*(alk + alk_index) != 100 || *(mas + mas_index) != 100){
+        if(*(alk + alk_index) == 100 && *(mas + mas_index) == 100){break;}
+        fgets(alki, 1000, file);
+        alki[strlen(alki) - 1] = '\0';
+        sscanf(alki, "%s %d %s %d", &ak, &com1, &ak2, &com2);
+        com1 %= 100;
+        com2 %= 100; 
+        while(*(mas + mas_index) != *(alk + alk_index)){
+            SetColor(10, 0);
+            printf("%3d\n", *(mas + mas_index));
+            SetColor(12, 0);
+            printf("  |\n");
+            SetColor(15, 0);
+            mas_index++;
+        }
+        if(*(alk + alk_index) == 100 && *(mas + mas_index) == 100){break;}
+        SetColor(10, 0);
+        printf("%3d", *(alk + alk_index));
+        SetColor(12, 0);
+        printf("___\n");
+        printf("  |  |\n");
+        SetColor(15, 0);
+        mas_index++;
+        alk_index++;
+        if(*(alk + alk_index) == 100 && *(mas + mas_index) == 100){break;}
+        int is = 0;
+        while(*(alk + alk_index) != 100 || *(mas + mas_index) != 100){
+            if(*(alk + alk_index) == com2){
+                is = 2;
+                break;
+            }
+            if(*(mas + mas_index) == com1){
+                is = 1;
+                break;
+            }
+            SetColor(10, 0);
+            printf("%3d%3d\n", *(mas + mas_index), *(alk + alk_index));
+            SetColor(12, 0);
+            printf("  |  |\n");
+            mas_index++;
+            alk_index++;
+            if(*(alk + alk_index) == 100 || *(mas + mas_index) == 100){break;}
+        }
+        if(is == 1){
+            while(*(alk + alk_index) != 100){
+                if(*(alk + alk_index) == com2){
+                    break;
+                }
+                SetColor(12, 0);
+                printf("  |");
+                SetColor(10, 0);
+                printf("%3d\n", *(alk + alk_index));
+                SetColor(12, 0);
+                printf("  |  |\n");
+                alk_index++;
+                if(*(alk + alk_index) == 100){break;}
+            }
+        }
+        if(is == 2){
+            while(*(mas + mas_index) != 100){
+                if(*(mas + mas_index) == com1){
+                    break;
+                }
+                SetColor(10, 0);
+                printf("%3d  ", *(mas + mas_index));
+                SetColor(12, 0);
+                printf("|\n");
+                SetColor(12, 0);
+                printf("  |  |\n");
+                mas_index++;
+                if(*(mas + mas_index) == 100){break;}
+            }
+        }
+        if(*(alk + alk_index) == 100 || *(mas + mas_index) == 100){break;}
+        SetColor(10, 0);
+        printf("%3d%3d\n", *(mas + mas_index), *(alk + alk_index));
+        SetColor(12, 0);
+        printf("  |  |\n");
+        mas_index++;
+        alk_index++;
+        SetColor(10, 0);
+        printf("%3d", *(mas + mas_index));
+        SetColor(12, 0);
+        printf("__|\n");
+        printf("  |\n");
+        SetColor(15, 0);
+        mas_index++;
+    }
+    fclose(file);
+    return;
+}
+// Tree:
 
 
 int main(int argc, char* argv[]){
@@ -4102,7 +4262,7 @@ int main(int argc, char* argv[]){
     
     // samav tree:
     else if(strcmp(argv[1], "tree") == 0){
-        //func:
+        run_tree(argc, argv, Samav_Root);
         return 0;
     }
 
