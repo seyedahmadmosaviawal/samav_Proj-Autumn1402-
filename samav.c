@@ -2015,7 +2015,7 @@ void search_message(int argc, char* argv[], int current, char* root_path){
 // Log Functions:
 
 
-// commit for merge and revert:
+// commit for merge:
 // int com_revert(int argc, char* argv[], char* rootpath, char* message, char* branch){
 
 // }
@@ -3288,8 +3288,32 @@ void run_revert(int want, int mes_want, char* message, char* rootpath, int argc,
 
     return;
 }
-
 // Revert Functions: //// 
+
+// check:
+int check(char* argv){
+    if(argv[0] != 's' || argv[1] != 'a' || argv[2] != 'm' || argv[3] != 'a' || argv[4] != 'v'){
+        return 1;
+    }
+    if(strstr(argv, "add") == NULL && strstr(argv, "init") == NULL && strstr(argv, "config") == NULL && strstr(argv, "add") == NULL && strstr(argv, "reset") == NULL && strstr(argv, "status") == NULL && strstr(argv, "commit") == NULL && strstr(argv, "log") == NULL && strstr(argv, "branch") == NULL && strstr(argv, "checkout") == NULL && strstr(argv, "tag") == NULL && strstr(argv, "diff") == NULL && strstr(argv, "merge") == NULL){
+        return 1;
+    }
+    return 0;
+}
+
+void err(){
+    SetColor(6, 0);
+    printf("SAMAV : ");
+    SetColor(9, 0);
+    printf("Please Insert A Complete Operation!\n");
+    SetColor(4, 0);
+    printf("NOTE : ");
+    SetColor(10, 0);
+    printf("Use \"samav help\" To Know All The Operations!");
+    SetColor(15, 0);
+    return;
+}
+
 
 
 int main(int argc, char* argv[]){
@@ -3305,6 +3329,13 @@ int main(int argc, char* argv[]){
     Samav_Root = samav_exist(argc, argv);
     char** config = config_reader(Samav_Root);
     int last_commit = config_commit(Samav_Root);
+    if(Samav_Root == NULL){
+        char base[1000];
+        strcpy(base, global_thing);
+        strcat(base, "\\loc_alias.txt");
+        FILE* file = fopen(base, "w");
+        fclose(file);
+    }
 
     ///////////////////// Menu: /////////////////////
 
@@ -3481,7 +3512,21 @@ int main(int argc, char* argv[]){
             }
             // Alias:
             if(strncmp(argv[3], "alias.", 6) == 0){
-                // LATER//
+                if(check(argv[4]) == 1){
+                    err();
+                    return 1;
+                }
+                char where[1000];
+                strcpy(where, global_thing);
+                strcat(where, "\\glob_alias.txt");
+                FILE* file = fopen(where, "a");
+                for(int i = 6; i < strlen(argv[3]); i++){
+                    fprintf(file ,"%c", argv[3][i]);
+                }
+                fprintf(file, ": ");
+                fprintf(file, "%s\n", argv[4]);
+                fclose(file);
+                fprintf(stdout, "SAMAV : Your Alias Has Been Saved!\n");
                 return 0;
             }
         
@@ -3556,12 +3601,26 @@ int main(int argc, char* argv[]){
             }
             // Alias:
             if(strncmp(argv[2], "alias.", 6) == 0){
-                // LATER//
+                if(check(argv[3]) == 1){
+                    err();
+                    return 1;
+                }
+                char where[1000];
+                strcpy(where, global_thing);
+                strcat(where, "\\loc_alias.txt");
+                FILE* file = fopen(where, "a");
+                for(int i = 6; i < strlen(argv[2]); i++){
+                    fprintf(file ,"%c", argv[2][i]);
+                }
+                fprintf(file, ": ");
+                fprintf(file, "%s\n", argv[3]);
+                fclose(file);
+                fprintf(stdout, "SAMAV : Your Alias Has Been Saved!\n");
                 return 0;
             }
         }
     }
-
+    
     // All The samav add:
     else if(strcmp(argv[1], "add") == 0){
         if(Samav_Root == NULL){fprintf(stdout ,"SAMAV : You Don't Have Any Initilized Repository. Please Use This Operation First:\nsamav init\nThen Try Again Later!"); return 1;}
@@ -3660,7 +3719,38 @@ int main(int argc, char* argv[]){
         strcpy(alaki, Samav_Root);
         strcat(alaki, "\\.samav");
         chdir(alaki);
+        if(strcmp(argv[2], "-s") == 0){
+            char alaki[1000];
+            strcpy(alaki, global_thing);
+            strcat(alaki, "\\message.txt");
+            FILE* file = fopen(alaki, "r");
+            int is = 0;
+            while(fgets(alaki, 1000, file)){
+                if(strstr(alaki, argv[3]) != NULL){
+                    is = 1;
+                    char mes[1000];
+                    char vaghei[1000];
+                    alaki[strlen(alaki) - 1] = '\0';
+                    sscanf(alaki, "%s", &vaghei);
+                    for(int i = strlen(vaghei) + 1; i < strlen(alaki); i++){
+                        mes[i - strlen(vaghei) - 1] = alaki[i];
+                    }
+                    strcpy(argv[3], mes);
+                    strcat(argv[3], "\0");
+                }
+            }
+            fclose(file);
+            if(!is){
+                SetColor(6, 0);
+                printf("SAMAV : ");
+                SetColor(9, 0);
+                printf("There Is No Shortcut With Name: \'%s\' ! Please Try Again!\n", argv[3]);
+                SetColor(15, 0);
+                return 1;
+            }
+        }
         run_commit(argc, argv, Samav_Root);
+        return 0;
     }
     
     // All the samav log:
@@ -4004,7 +4094,173 @@ int main(int argc, char* argv[]){
         return 0;
     }
     
+    // samav help:
+    else if(strcmp(argv[1], "help") == 0){
+        // help();
+        return 0;
+    }
     
+    // samav tree:
+    else if(strcmp(argv[1], "tree") == 0){
+        //func:
+        return 0;
+    }
+
+    // set, replace, remove:
+    else if(strcmp(argv[1], "set") == 0){
+        if(argc != 6){
+            err();
+            return 1;
+        }
+        char where[1000];
+        strcpy(where, global_thing);
+        strcat(where, "\\message.txt");
+        FILE* file = fopen(where, "a");
+        fprintf(file, "%s: ", argv[5]);
+        fprintf(file, "%s\n", argv[3]);
+        fclose(file);
+        printf("SAMAV : A Shortcut Name Has Been Saved!\n");
+        return 0;
+    }
+    else if(strcmp(argv[1], "replace") == 0){
+        if(argc != 6){
+            err();
+            return 1;
+        }
+        char where[1000];
+        strcpy(where, global_thing);
+        strcat(where, "\\message.txt");
+        char share[1000];
+        strcpy(share, global_thing);
+        strcat(share, "\\mes.txt");
+        FILE* file = fopen(where, "r");
+        FILE* file2 = fopen(share, "w");
+        int is = 0;
+        char alaki[1000];
+        while(fgets(alaki, 1000 ,file)){
+            if(strstr(alaki, argv[5])){
+                fprintf(file2, "%s: %s\n", argv[5], argv[3]);
+                is = 1;
+            }
+            else{
+                fprintf(file2, alaki);
+            }
+        }
+        fclose(file);
+        fclose(file2);
+        strcpy(alaki, "del \"");
+        strcat(alaki, where);
+        strcat(alaki, "\"");
+        system(alaki);
+        strcpy(alaki, "rename \"");
+        strcat(alaki, share);
+        strcat(alaki, "\" message.txt");
+        system(alaki);
+        if(!is){
+            SetColor(6, 0);
+            printf("SAMAV : ");
+            SetColor(9, 0);
+            printf("Replacement Was Canceled Because The Name Did Not Exist!\n");
+            SetColor(15, 0);
+            return 1;
+        }
+        SetColor(6, 0);
+        printf("SAMAV : ");
+        SetColor(9, 0);
+        printf("Replacement Was Succesful\n");
+        SetColor(15, 0);
+        return 0;
+    }
+    else if(strcmp(argv[1], "remove") == 0){
+        if(argc != 4){
+            err();
+            return 1;
+        }
+        char where[1000];
+        strcpy(where, global_thing);
+        strcat(where, "\\message.txt");
+        char share[1000];
+        strcpy(share, global_thing);
+        strcat(share, "\\mes.txt");
+        FILE* file = fopen(where, "r");
+        FILE* file2 = fopen(share, "w");
+        int is = 0;
+        char alaki[1000];
+        while(fgets(alaki, 1000, file)){
+            if(strstr(alaki, argv[3]) != NULL){
+                is = 1;
+                continue;
+            }
+            fprintf(file2, alaki);
+        }
+        fclose(file);
+        fclose(file2);
+        strcpy(alaki, "del \"");
+        strcat(alaki, where);
+        strcat(alaki, "\"");
+        system(alaki);
+        strcpy(alaki, "rename \"");
+        strcat(alaki, share);
+        strcat(alaki, "\" message.txt");
+        system(alaki);
+        if(!is){
+            SetColor(6, 0);
+            printf("SAMAV : ");
+            SetColor(9, 0);
+            printf("You Can\'t Remove This Shortcut Because This Shortcut Doesn\'t Exist!\n");
+            SetColor(15, 0);
+            return 1;
+        }
+        SetColor(6, 0);
+        printf("SAMAV : ");
+        SetColor(9, 0);
+        printf("The Shortcut Was Successfully Deleted\n");
+        SetColor(15, 0);        
+        return 0;
+    }
+
+    // Alias
+    else{
+        char alias_glob[1000];
+        strcpy(alias_glob, global_thing);
+        strcat(alias_glob, "\\glob_alias.txt");
+        FILE* file1 = fopen(alias_glob, "r");
+        while(fgets(alias_glob, 1000, file1)){
+            char nam[100];
+            char oper[1000];
+            alias_glob[strlen(alias_glob) - 1] = '\0';
+            sscanf(alias_glob, "%s", &nam);
+            for(int i = strlen(nam) + 1; i < strlen(alias_glob); i++){
+                oper[i - strlen(nam) - 1] = alias_glob[i];
+            }
+            oper[strlen(alias_glob) - strlen(nam) - 1] = '\0';
+            if(strstr(nam, argv[1]) != NULL){
+                system(oper);
+                return 0;
+            }
+        }
+        fclose(file1);
+        strcpy(alias_glob, global_thing);
+        strcat(alias_glob, "\\loc_alias.txt");
+        file1 = fopen(alias_glob, "r");
+        while(fgets(alias_glob, 1000, file1)){
+            char nam[100];
+            char oper[1000];
+            alias_glob[strlen(alias_glob) - 1] = '\0';
+            sscanf(alias_glob, "%s", &nam, &oper);
+            for(int i = strlen(nam) + 1; i < strlen(alias_glob); i++){
+                oper[i - strlen(nam) - 1] = alias_glob[i];
+            }
+            oper[strlen(alias_glob) - strlen(nam) - 1] = '\0';
+            if(strstr(nam, argv[1]) != NULL){
+                system(oper);
+                return 0;
+            }
+        }
+        fclose(file1);
+        err();
+        return 1;
+    }
     
     return 0;
 }
