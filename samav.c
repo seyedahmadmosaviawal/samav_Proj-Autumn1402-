@@ -3417,7 +3417,8 @@ void run_revert(int want, int mes_want, char* message, char* rootpath, int argc,
     strcat(branc, "\\");
     strcat(branc, tmp1);
     strcat(vala, branc);
-    strcat(vala, "\"");
+    strcat(vala, "\" > NUL");
+    system(vala);
 
     return;
 }
