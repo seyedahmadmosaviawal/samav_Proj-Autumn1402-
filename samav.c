@@ -22,7 +22,7 @@
 #define global_thing "C:\\Users\\user\\Desktop\\c programs\\tamrin\\project_1402_autumn\\global"
 #define wildcard_path "C:\\Users\\user\\Desktop\\c programs\\tamrin\\project_1402_autumn\\global\\wildcard.txt"
 
-// Error: {fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!"); return 1;}
+// Error: {err(); return 1;}
 // Don't Have: {fprintf(stdout ,"SAMAV : You Don't Have Any Initilized Repository. Please Use This Operation First:\nsamav init\nThen Try Again Later!"); return 1;}
 
 
@@ -67,58 +67,174 @@ void SetColor(int ForgC, int BackC);
 
 
 
-// // help:
-// // void help(){
-//     printf("NOTE : Argumants In [] Are Optional And You Can Choose Argumants In <>\n");
-//     SetColor(15, 0);
-//     printf("______________________________________________________________\n");
-//     SetColor(10, 0);
-//     printf("samav config [-global] user.<name, email> \"Your Input\":\n");
-//     SetColor(4, 0);
-//     printf("Configuration Your Name And Email For Global Or Local Repository!\n");
-//     SetColor(15, 0);
-//     printf("______________________________________________________________\n");
-//     SetColor(10, 0);
-//     printf("samav config [-global] alias.(aliasname) \" a command\":\n");
-//     SetColor(4, 0);
-//     printf("Its For Save An Global Or Local Alias For A Command\n");
-//     SetColor(15, 0);
-//     printf("______________________________________________________________\n");
-//     SetColor(10, 0);
-//     printf("samav init:\n");
-//     SetColor(4, 0);
-//     printf("Its For Initializing A Repository!\n");
-//     SetColor(15, 0);
-//     printf("______________________________________________________________\n");
-//     SetColor(10, 0);
-//     printf("samav add [-f] [-redo] [-n, (depth)] <File_Address, Folder_Address>:\n");
-//     SetColor(4, 0);
-//     printf("Its For Adding A File Or Folder's File(s) In Your Repository!\n");
-//     printf("Option -f Is For Adding Some Files In One Step, -n Is For Showing The Situation of Files In Your Project\nBy Depth You Can Choose How Many Depth Do You Want To See. And -redo Is For Modified Files!\n");
-//     SetColor(15, 0);
-//     printf("______________________________________________________________\n");
-//     SetColor(10, 0);
-//     printf("samav reset [-undo] [File, Folder_Address]:\n");
-//     SetColor(4, 0);
-//     printf("This Operation Is The Opposite Of \'samav add\'!, By -undo Option You Can Just Reset Your Last Added Files\n");
-//     SetColor(15, 0);
-//     printf("______________________________________________________________\n");
-//     SetColor(10, 0);
-//     printf("samav status");
-//     SetColor(4, 0);
-//     printf("This Operation Is For Showing The Situations Of Files In Your Proj! By \'XY\'!\nX Can Be +(In Staging Area) And -(Not In Staging Area), Y Can Be A(Added), M(Modified) And D(Deleted Files)\n");
-//     SetColor(15, 0);
-//     printf("______________________________________________________________\n");
-//     SetColor(10, 0);
-//     printf("samav commit -m \" Your Message\":\n");
-//     SetColor(4, 0);
-//     printf("Its For Create A Commit In MeanWhile Situation!\n");
-
-
-
-
-//     return;
-// }
+// help:
+void help(){
+    printf("NOTE : Argumants In [] Are Optional And You Can Choose Argumants In <>\n");
+    SetColor(15, 0);
+    printf("______________________________________________________________\n");
+    SetColor(11, 0);
+    printf(" 1)");
+    SetColor(10, 0);
+    printf("samav config [-global] user.<name, email> \"Your Input\":\n");
+    SetColor(13, 0);
+    printf("Configuration Your Name And Email For Global Or Local Repository!\n");
+    SetColor(15, 0);
+    printf("______________________________________________________________\n");
+    SetColor(11, 0);
+    printf(" 2)");
+    SetColor(10, 0);
+    printf("samav config [-global] alias.(aliasname) \" a command\":\n");
+    SetColor(13, 0);
+    printf("Its For Save An Global Or Local Alias For A Command\n");
+    SetColor(15, 0);
+    printf("______________________________________________________________\n");
+    SetColor(11, 0);
+    printf(" 3)");
+    SetColor(10, 0);
+    printf("samav init:\n");
+    SetColor(13, 0);
+    printf("Its For Initializing A Repository!\n");
+    SetColor(15, 0);
+    printf("______________________________________________________________\n");
+    SetColor(11, 0);
+    printf(" 4)");
+    SetColor(10, 0);
+    printf("samav add [-f] [-redo] [-n, (depth)] <File_Address, Folder_Address>:\n");
+    SetColor(13, 0);
+    printf("Its For Adding A File Or Folder's File(s) In Your Repository!\n");
+    printf("Option -f Is For Adding Some Files In One Step, -n Is For Showing The Situation of Files In Your Project\nBy Depth You Can Choose How Many Depth Do You Want To See. And -redo Is For Modified Files!\n");
+    SetColor(15, 0);
+    printf("______________________________________________________________\n");
+    SetColor(11, 0);
+    printf(" 5)");
+    SetColor(10, 0);
+    printf("samav reset [-undo] [File, Folder_Address]:\n");
+    SetColor(13, 0);
+    printf("This Operation Is The Opposite Of \'samav add\'!, By -undo Option You Can Just Reset Your Last Added Files\n");
+    SetColor(15, 0);
+    printf("______________________________________________________________\n");
+    SetColor(11, 0);
+    printf(" 6)");
+    SetColor(10, 0);
+    printf("samav status:");
+    SetColor(13, 0);
+    printf("This Operation Is For Showing The Situations Of Files In Your Proj! By \'XY\'!\nX Can Be +(In Staging Area) And -(Not In Staging Area), Y Can Be A(Added), M(Modified) And D(Deleted Files)\n");
+    SetColor(15, 0);
+    printf("______________________________________________________________\n");
+    SetColor(11, 0);
+    printf(" 7)");
+    SetColor(10, 0);
+    printf("samav commit -m \" Your Message\":\n");
+    SetColor(13, 0);
+    printf("Its For Create A Commit In MeanWhile Situation!\n");
+    SetColor(15, 0);
+    printf("______________________________________________________________\n");
+    SetColor(11, 0);
+    printf(" 8)");
+    SetColor(10, 0);
+    printf("samav set -m \"Your Message\" -s Shortcut_Name:\n");
+    SetColor(13, 0);
+    printf("By This Operation You Can Set A Shortcut_Name For A Message In Commits.\n");
+    SetColor(15, 0);
+    printf("______________________________________________________________\n");
+    SetColor(11, 0);
+    printf(" 9)");
+    SetColor(10, 0);
+    printf("samav replace -m \"New Message\" Exist_Name:\n");
+    SetColor(13, 0);
+    printf("This Operation Is Used For Replacing A Message For A Already Exist Shortcut_Name\n");
+    SetColor(15, 0);
+    printf("______________________________________________________________\n");
+    SetColor(11, 0);
+    printf("10)");
+    SetColor(10, 0);
+    printf("samav remove -s Shortcut_Name:\n");
+    SetColor(13, 0);
+    printf("By This Operation You Can Remove An Already Exist Shortcut_Name\n");
+    SetColor(15, 0);
+    printf("______________________________________________________________\n");
+    SetColor(11, 0);
+    printf("11)");
+    SetColor(10, 0);
+    printf("samav log [-n (number)] [-branch (name)] [-author (name)] [-since (date)] [-before (date)] [-search (word)]:\n");
+    SetColor(13, 0);
+    printf("By This Operation You Can See Some Informations About Your Commits!\nBy -n You Can Choose How Many Commits Do You Want To See, -branch Is For Showing Just Commits In This Branch And ...\n");
+    SetColor(15, 0);
+    printf("______________________________________________________________\n");
+    SetColor(11, 0);
+    printf("12)");
+    SetColor(10, 0);
+    printf("samav branch [branch name]:\n");
+    SetColor(13, 0);
+    printf("This Operation Is Used For Making A Branch or Just Showing The Name Of Branches. By Entering branch_name You Can Make A Branch With This Name.\n");
+    SetColor(15, 0);
+    printf("______________________________________________________________\n");
+    SetColor(11, 0);
+    printf("13)");
+    SetColor(10, 0);
+    printf("samav checkout [Branch_Name] [Commit_Id] [HEAD] [HEAD-n (number)]:\n");
+    SetColor(13, 0);
+    printf("By This Operation You Can Checkout To Another Situation.\nBy Branch_Name You Will Go To Head Of Branch, By Commit_Id You Will Go To That Commit And By HEAD You Can Go To Your Last Commit\n");
+    SetColor(15, 0);
+    printf("______________________________________________________________\n");
+    SetColor(11, 0);
+    printf("14)");
+    SetColor(10, 0);
+    printf("samav revert [-n] [-m (message)] <Commit_Id, HEAD-X (number)]:\n");
+    SetColor(13, 0);
+    printf("By This Operation You Can Go To Commit_Id Or HEAD-x And It Will Create A Commit There.\nBy Choosing -n Option You Can Say You Don\'t Want To Create A Commit And By -m You Can Choose Your Own Message For Commit\n");
+    SetColor(15, 0);
+    printf("______________________________________________________________\n");
+    SetColor(11, 0);
+    printf("15)");
+    SetColor(10, 0);
+    printf("samav tag -a <tag_name> [-m (message)] [-c (commit id)] [-f]:\n");
+    SetColor(13, 0);
+    printf("This Operation Is For Making A Tag In Your Own Commit(By Choosing -c)\nAlso By Entering Message You Can Choose A Message For Your Tag\nBy -f Operation You Can Owerwrite An Already Exist Tag\n");
+    SetColor(15, 0);
+    printf("______________________________________________________________\n");
+    SetColor(11, 0);
+    printf("16)");
+    SetColor(10, 0);
+    printf("samav tree:\n");
+    SetColor(13, 0);
+    printf("By This Operation You Can See The Tree Of Commits In Your Window!\n");
+    SetColor(15, 0);
+    printf("______________________________________________________________\n");
+    SetColor(11, 0);
+    printf("17)");
+    SetColor(10, 0);
+    printf("samav grep -f <File_Address> -p <Word> [-c (commit Id)] [-n]:\n");
+    SetColor(13, 0);
+    printf("By This Operation You Can Search A Word In A File\nBy Choosing -c You Can Find This Word In Commit Id Situation\nBy -n You Can See The Line Number!\n");
+    SetColor(15, 0);
+    printf("______________________________________________________________\n");
+    SetColor(11, 0);
+    printf("18)");
+    SetColor(10, 0);
+    printf("samav diff -f <file1> <file2> [-line1 (begin-end)] [-line2 (begin-end)]:\n");
+    SetColor(13, 0);
+    printf("By This Operation You Can See Different(s) Of Two Files\nBy Choosing -line You Can See Comparing Of Two Files Just Between Begin And End Number Line\n");
+    SetColor(15, 0);
+    printf("______________________________________________________________\n");
+    SetColor(11, 0);
+    printf("19)");
+    SetColor(10, 0);
+    printf("samav diff -c <commit Id 1> <commit Id 2>:\n");
+    SetColor(13, 0);
+    printf("By This Operation You Can See Different(s) Of Two Files\nBut You Can See Comparing The Files In This Two Commit Id\n");
+    SetColor(15, 0);
+    printf("______________________________________________________________\n");
+    SetColor(11, 0);
+    printf("20)");
+    SetColor(10, 0);
+    printf("samav merge -b <branch1> <bracnh2>:\n");
+    SetColor(13, 0);
+    printf("By This Operation You Can Merge Two Branches\nIf Your Files Have Differnet(s) You Can See CONFLICT ERROR!\nAnd You Can Choose How Do You Want To Fix That Problem\n");
+    SetColor(15, 0);
+    printf("______________________________________________________________\n");
+    return;
+}
 
 
 
@@ -1419,7 +1535,7 @@ int max_in_commit(char* rootpath, char* name){
 
     // for readdir()
     int tmp; 
-    int max = -1;
+    int max = 999999;
     while ((de = readdir(dr)) != NULL){
         if(strcmp(de->d_name, "..") != 0 && strcmp(de->d_name, ".") != 0){
             char alak[1000];
@@ -1449,9 +1565,11 @@ int is_head(char* rootpath, int where){
 
     // for readdir()
     int tmp; 
-    int max = -1;
+    // int max = -1;
+    int is = 0;
     while ((de = readdir(dr)) != NULL){
         if(strcmp(de->d_name, "..") != 0 && strcmp(de->d_name, ".") != 0){
+            is = 1;
             if(where == max_in_commit(rootpath, de->d_name)){
                 closedir(dr);
                 return 1;
@@ -1459,6 +1577,9 @@ int is_head(char* rootpath, int where){
         }
     }
     closedir(dr); 
+    if(!is){
+        return 1;
+    }
     return 0;
 }
 
@@ -1993,11 +2114,15 @@ void search_message(int argc, char* argv[], int current, char* root_path){
                 for(int w = 0; w < ((int)(salam - *(alk + 0))); w++){
                     fprintf(stdout, "%c", *(*(alk + 0) + w));
                 }
+                SetColor(4, 0);
                 fprintf(stdout, "<<");
+                SetColor(10, 0);
                 for(int w = 0; w < strlen(argv[j]); w++){
                     fprintf(stdout, "%c", argv[j][w]);
                 }
+                SetColor(4, 0);
                 fprintf(stdout, ">>");
+                SetColor(15, 0);
                 for(int w = strlen(argv[j]); w < strlen(salam); w++){
                     fprintf(stdout, "%c", *(salam + w));
                 }
@@ -2015,11 +2140,6 @@ void search_message(int argc, char* argv[], int current, char* root_path){
 }
 // Log Functions:
 
-
-// commit for merge:
-// int com_revert(int argc, char* argv[], char* rootpath, char* message, char* branch){
-
-// }
 
 
 
@@ -2854,7 +2974,6 @@ int merge_run(int argc, char* argv[], int commit1, int commit2, char* rootpath){
     char tmp1[100];
     sprintf(tmp1, "%d.txt", commit2);
     strcat(com2, tmp1);
-    printf("%s, %s\n", com1, com2);
 
     // open:
     FILE* file1 = fopen(com1, "r");
@@ -3287,6 +3406,19 @@ void run_revert(int want, int mes_want, char* message, char* rootpath, int argc,
     printf("Commit Was Successful With ID: \'%d\', Message: \'%s\' !\n", last_commit_ID, message);
     SetColor(15, 0);
 
+
+    char vala[1000] = "copy \"";
+    strcat(vala, jaj);
+    strcat(vala, "\" \"");
+    char branc[1000];
+    strcpy(branc, rootpath);
+    strcat(branc, "\\.samav\\branches\\");
+    strcat(branc, *(confi + 2));
+    strcat(branc, "\\");
+    strcat(branc, tmp1);
+    strcat(vala, branc);
+    strcat(vala, "\"");
+
     return;
 }
 // Revert Functions: //// 
@@ -3384,12 +3516,14 @@ void run_tree(int argc, char* argv[], char* rootpath){
     char ak2[100];
     while(*(alk + alk_index) != 100 || *(mas + mas_index) != 100){
         if(*(alk + alk_index) == 100 && *(mas + mas_index) == 100){break;}
-        fgets(alki, 1000, file);
-        alki[strlen(alki) - 1] = '\0';
-        sscanf(alki, "%s %d %s %d", &ak, &com1, &ak2, &com2);
-        com1 %= 100;
-        com2 %= 100; 
+        if(fgets(alki, 1000, file)){
+            alki[strlen(alki) - 1] = '\0';
+            sscanf(alki, "%s %d %s %d", &ak, &com1, &ak2, &com2);
+            com1 %= 100;
+            com2 %= 100;
+        } 
         while(*(mas + mas_index) != *(alk + alk_index)){
+            if(*(mas + mas_index) == 100){break;}
             SetColor(10, 0);
             printf("%3d\n", *(mas + mas_index));
             SetColor(12, 0);
@@ -3413,7 +3547,15 @@ void run_tree(int argc, char* argv[], char* rootpath){
                 is = 2;
                 break;
             }
+            if(*(alk + alk_index) == 100){
+                is = 2;
+                break;
+            }
             if(*(mas + mas_index) == com1){
+                is = 1;
+                break;
+            }
+            if(*(mas + mas_index) == 100){
                 is = 1;
                 break;
             }
@@ -3421,6 +3563,7 @@ void run_tree(int argc, char* argv[], char* rootpath){
             printf("%3d%3d\n", *(mas + mas_index), *(alk + alk_index));
             SetColor(12, 0);
             printf("  |  |\n");
+            SetColor(15, 0);
             mas_index++;
             alk_index++;
             if(*(alk + alk_index) == 100 || *(mas + mas_index) == 100){break;}
@@ -3430,29 +3573,40 @@ void run_tree(int argc, char* argv[], char* rootpath){
                 if(*(alk + alk_index) == com2){
                     break;
                 }
+                if(*(alk + alk_index - 1) == com2){
+                    alk_index--;
+                    break;
+                }
                 SetColor(12, 0);
                 printf("  |");
                 SetColor(10, 0);
                 printf("%3d\n", *(alk + alk_index));
                 SetColor(12, 0);
                 printf("  |  |\n");
+                SetColor(15, 0);
                 alk_index++;
                 if(*(alk + alk_index) == 100){break;}
             }
         }
-        if(is == 2){
+        else if(is == 2){
             while(*(mas + mas_index) != 100){
                 if(*(mas + mas_index) == com1){
                     break;
                 }
+                if(*(mas + mas_index - 1) == com1){
+                    mas_index--;
+                    break;
+                }
+                if(*(mas + mas_index - 1) == 100 || *(mas + mas_index) == 100){break;}
                 SetColor(10, 0);
                 printf("%3d  ", *(mas + mas_index));
                 SetColor(12, 0);
                 printf("|\n");
                 SetColor(12, 0);
                 printf("  |  |\n");
+                SetColor(15, 0);
                 mas_index++;
-                if(*(mas + mas_index) == 100){break;}
+                if(*(mas + mas_index - 1) == 100 || *(mas + mas_index) == 100){break;}
             }
         }
         if(*(alk + alk_index) == 100 || *(mas + mas_index) == 100){break;}
@@ -3469,6 +3623,8 @@ void run_tree(int argc, char* argv[], char* rootpath){
         printf("  |\n");
         SetColor(15, 0);
         mas_index++;
+        com1 = 0;
+        com2 = 0;
     }
     fclose(file);
     return;
@@ -3479,7 +3635,7 @@ void run_tree(int argc, char* argv[], char* rootpath){
 int main(int argc, char* argv[]){
     // Less Than 2 Inputs:
     if (argc < 2){
-        fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!\n");
+        err();
         return 1;
     }
 
@@ -3487,8 +3643,12 @@ int main(int argc, char* argv[]){
     if(getcwd(Current, sizeof(Current)) == NULL) {fprintf(stdout, "SAMAV : There Is An Unknown Error Please Try Again!\n"); return 1;}
     char* Samav_Root;
     Samav_Root = samav_exist(argc, argv);
-    char** config = config_reader(Samav_Root);
-    int last_commit = config_commit(Samav_Root);
+    int last_commit;
+    char** config;
+    if(Samav_Root != NULL){
+        config = config_reader(Samav_Root);
+        last_commit = config_commit(Samav_Root);
+    }
     if(Samav_Root == NULL){
         char base[1000];
         strcpy(base, global_thing);
@@ -3601,9 +3761,9 @@ int main(int argc, char* argv[]){
     // All The samav config:
     else if(strcmp(argv[1], "config") == 0){
         // Global:
-        if(argc < 4){fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!"); return 1;}
+        if(argc < 4){err(); return 1;}
         if(strcmp(argv[2], "-global") == 0){
-            if(argc < 5){fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!"); return 1;}
+            if(argc < 5){err(); return 1;}
             // User.Name:
             if(strcmp(argv[3], "user.name") == 0){
                 if(!global_writter(argc, argv, 1, argv[4], 1))
@@ -3784,7 +3944,7 @@ int main(int argc, char* argv[]){
     // All The samav add:
     else if(strcmp(argv[1], "add") == 0){
         if(Samav_Root == NULL){fprintf(stdout ,"SAMAV : You Don't Have Any Initilized Repository. Please Use This Operation First:\nsamav init\nThen Try Again Later!"); return 1;}
-        if(argc < 3){fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!"); return 1;}
+        if(argc < 3){err(); return 1;}
         strcat(Samav_Root, "\\.samav");
         chdir(Samav_Root);
         if(strcmp(argv[2], "-f") == 0){
@@ -3835,7 +3995,7 @@ int main(int argc, char* argv[]){
     // All The samav reset:
     else if(strcmp(argv[1], "reset") == 0){
         if(Samav_Root == NULL){fprintf(stdout ,"SAMAV : You Don't Have Any Initilized Repository. Please Use This Operation First:\nsamav init\nThen Try Again Later!"); return 1;}
-        if(argc < 3){fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!"); return 1;}
+        if(argc < 3){err(); return 1;}
         strcat(Samav_Root, "\\.samav");
         chdir(Samav_Root);
         if(strcmp(argv[2], "-undo") == 0){
@@ -3873,7 +4033,7 @@ int main(int argc, char* argv[]){
     // All The samav commit:
     else if(strcmp(argv[1], "commit") == 0){
         if(Samav_Root == NULL){fprintf(stdout ,"SAMAV : You Don't Have Any Initilized Repository. Please Use This Operation First:\nsamav init\nThen Try Again Later!"); return 1;}
-        if(argc < 4){fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!"); return 1;}
+        if(argc < 4){err(); return 1;}
         if(strlen(argv[3]) > 72){fprintf(stdout, "SAMAV : Your Message Has %d Character And It's Over Limit (72)!\nPlease Choose A Shorter Message!", strlen(argv[3])); return 1;}
         char alaki[1000];
         strcpy(alaki, Samav_Root);
@@ -3926,17 +4086,17 @@ int main(int argc, char* argv[]){
             return 0;
         }
         if(strcmp(argv[2], "-branch") == 0){
-            if(argc != 4){fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!"); return 1;}
+            if(argc != 4){err(); return 1;}
             commit_in_branch(argc, argv, argv[3], Samav_Root);
             return 0;
         }
         if(strcmp(argv[2], "-author") == 0){
-            if(argc != 4){fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!"); return 1;}
+            if(argc != 4){err(); return 1;}
             author_in_log(argc, argv, argv[3], Samav_Root, last_commit);
             return 0;
         }
         if(strcmp(argv[2], "-since") == 0){
-            if(argc != 4){fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!"); return 1;}
+            if(argc != 4){err(); return 1;}
             int h, m;
             sscanf(argv[3], "%d:%d", &h, &m);
             int sum = (60 * h) + m;
@@ -3944,7 +4104,7 @@ int main(int argc, char* argv[]){
             return 0;
         }
         if(strcmp(argv[2], "-before") == 0){
-            if(argc != 4){fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!"); return 1;}
+            if(argc != 4){err(); return 1;}
             int h, m;
             sscanf(argv[3], "%d:%d", &h, &m);
             int sum = (60 * h) + m;
@@ -3952,7 +4112,7 @@ int main(int argc, char* argv[]){
             return 0;
         }
         if(strcmp(argv[2], "-search") == 0){
-            if(argc < 4){fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!"); return 1;}
+            if(argc < 4){err(); return 1;}
             search_message(argc, argv, last_commit, Samav_Root);
             return 0;
         }
@@ -3969,13 +4129,13 @@ int main(int argc, char* argv[]){
         if(argc == 2){
             return branch_show(argc, argv, Samav_Root);
         }
-        else{fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!"); return 1;}
+        else{err(); return 1;}
     }
 
     // All The samav checkout:
     else if(strcmp(argv[1], "checkout") == 0){
         if(Samav_Root == NULL){fprintf(stdout ,"SAMAV : You Don't Have Any Initilized Repository. Please Use This Operation First:\nsamav init\nThen Try Again Later!"); return 1;}
-        if(argc < 3){fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!"); return 1;}
+        if(argc < 3){err(); return 1;}
         char where[1000];
         strcpy(where, Samav_Root);
         strcat(where, "\\.samav\\stage.txt");
@@ -4018,7 +4178,7 @@ int main(int argc, char* argv[]){
             return 0;
         }
         if(strcmp(argv[2], "show") == 0){
-            if(argc != 4){fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!"); return 1;}
+            if(argc != 4){err(); return 1;}
             tag_show(argc, argv, Samav_Root);
             return 0;
         } 
@@ -4028,11 +4188,11 @@ int main(int argc, char* argv[]){
             char mess[100] = "No Message!";
             for(int i = 4; i < argc; i++){
                 if(strcmp(argv[i], "-m") == 0){
-                    if(i == argc - 1){fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!"); return 1;}
+                    if(i == argc - 1){err(); return 1;}
                     strcpy(mess, argv[i + 1]);
                 }
                 else if(strcmp(argv[i], "-c") == 0){
-                    if(i == argc - 1){fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!"); return 1;}
+                    if(i == argc - 1){err(); return 1;}
                     strcpy(*(tag + 2), argv[i + 1]);
                 }
                 else if(strcmp(argv[i], "-f") == 0){
@@ -4042,7 +4202,7 @@ int main(int argc, char* argv[]){
             tag_maker(argc, argv, state, tag, mess, Samav_Root);
             return 0;
         }
-        fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!");
+        err();
         return 1;
     }
 
@@ -4050,7 +4210,7 @@ int main(int argc, char* argv[]){
     else if(strcmp(argv[1], "diff") == 0){
         int m = 0;
         if(strcmp(argv[2], "-f") == 0){
-            if(argc < 5){fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!"); return 1;}
+            if(argc < 5){err(); return 1;}
             if(argc == 5){
                 strcat(Samav_Root, "\\.samav");
                 chdir(Samav_Root);
@@ -4066,7 +4226,7 @@ int main(int argc, char* argv[]){
             return 0;
         }
         if(strcmp(argv[2], "-c") == 0){
-            if(argc != 5){fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!"); return 1;}
+            if(argc != 5){err(); return 1;}
             com_diff(argv[3], argv[4], Samav_Root);
             return 0;
         }
@@ -4074,9 +4234,19 @@ int main(int argc, char* argv[]){
 
     // All The samav merge:
     else if(strcmp(argv[1], "merge") == 0){
-        if(argc != 5){fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!"); return 1;}  
+        if(argc != 5){err(); return 1;}  
         int commit1 = max_in_commit(Samav_Root, argv[3]);
         int commit2 = max_in_commit(Samav_Root, argv[4]);
+
+        chdir(".samav");
+        if( merge_run(argc, argv, commit1, commit2, Samav_Root) == 1){
+            SetColor(6, 0);
+            printf("\nSAMAV : ");
+            SetColor(9, 0);
+            printf("Please Try Again!\n");
+            SetColor(15, 0);
+            return 0;
+        }
         char alaki[1000];
         strcpy(alaki, Samav_Root);
         strcat(alaki, "\\.samav\\merge.txt");
@@ -4111,15 +4281,7 @@ int main(int argc, char* argv[]){
         strcat(line, alaki);
         strcat(line, "\" > NUL");
         system(line);
-        chdir(".samav");
-        if( merge_run(argc, argv, commit1, commit2, Samav_Root) == 1){
-            SetColor(6, 0);
-            printf("\nSAMAV : ");
-            SetColor(9, 0);
-            printf("Please Try Again!\n");
-            SetColor(15, 0);
-            return 0;
-        }
+
         SetColor(6, 0);
         printf("\nSAMAV : ");
         SetColor(9, 0);
@@ -4132,7 +4294,7 @@ int main(int argc, char* argv[]){
 
     // All The samav grep:
     else if(strcmp(argv[1], "grep") == 0){
-        if(argc < 6){fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!"); return 1;}
+        if(argc < 6){err(); return 1;}
         int line = 0;
         int is = 0;
         char com[1000];
@@ -4152,7 +4314,7 @@ int main(int argc, char* argv[]){
 
     // All The samav revert:
     else if(strcmp(argv[1], "revert") == 0){
-        if(argc < 3){fprintf(stdout , "SAMAV : Please Insert A Complete Operation!\nNOTE: Use \"samav help\" To Know All The Operations!"); return 1;}
+        if(argc < 3){err(); return 1;}
         char laki[1000];
         strcpy(laki, Samav_Root);
         strcat(laki, "\\.samav\\merge.txt");
@@ -4256,7 +4418,7 @@ int main(int argc, char* argv[]){
     
     // samav help:
     else if(strcmp(argv[1], "help") == 0){
-        // help();
+        help();
         return 0;
     }
     
